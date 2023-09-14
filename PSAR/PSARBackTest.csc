@@ -435,7 +435,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = currentTran.price + currentTran.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           if (currentOrderId == 1) {
-            t.amount = AMOUNT;
+            t.amount = AMOUNT / 2.0;
             t.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
           } else {
             t.amount = AMOUNT;
@@ -459,7 +459,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = currentTran.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           if (currentOrderId == 1) {
-            t.amount = AMOUNT;
+            t.amount = AMOUNT / 2.0;
             t.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
           } else {
             t.amount = AMOUNT;
