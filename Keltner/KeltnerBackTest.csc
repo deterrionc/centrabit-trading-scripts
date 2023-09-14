@@ -304,7 +304,7 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.marker = currentOrderId;
         filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT;
+          filledTransaction.amount = AMOUNT / 2.0;
           filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
         } else {
           filledTransaction.amount = AMOUNT;
@@ -361,7 +361,7 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.marker = currentOrderId;
         filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT;
+          filledTransaction.amount = AMOUNT / 2.0;
           filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
         } else {
           filledTransaction.amount = AMOUNT;
