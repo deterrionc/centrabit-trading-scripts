@@ -1,1 +1,1 @@
-# centrabit-trading-scripts
+# Centrabit Trading Scripts
