@@ -179,7 +179,12 @@ void onOwnOrderFilledTest(transaction t) {
     }
     entryAmount = amount;
     entryFee = t.fee;
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+
+    if (tradeNumber == 1) {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT / 2.0);
+    } else {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+    }
 
     tradeListLog >> tradeLog;
 
@@ -256,15 +261,24 @@ void onPubOrderFilledTest(transaction t) {
       stopped = false;
     } else {
       currentOrderId++;
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
-  
+      if (currentOrderId == 1) {
+        print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+      } else {
+        print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      }
+
       # emulating buy order filling
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      if (currentOrderId == 1) {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+      } else {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      }
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
@@ -289,15 +303,24 @@ void onPubOrderFilledTest(transaction t) {
       stopped = false;
     } else {
       currentOrderId++;
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      if (currentOrderId == 1) {
+        print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+      } else {
+        print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      }
 
       # emulating sell order filling
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      if (currentOrderId == 1) {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+      } else {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      }
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
@@ -541,7 +564,7 @@ void backtest() {
 
   print("");
   
-  string tradeListTitle = "Trade\tTime";
+  string tradeListTitle = "\tTrade\tTime";
   tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\t\t");
   tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), symbolSetting);
   tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tMax");
