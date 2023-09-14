@@ -156,7 +156,12 @@ void onOwnOrderFilledTest(transaction t) {
     }
     entryAmount = amount;
     entryFee = t.fee;
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+
+    if (tradeNumber == 1) {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT / 2.0);
+    } else {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+    }
 
     tradeListLog >> tradeLog;
 
@@ -234,7 +239,7 @@ void onTimeOutTest(integer i) {
     }
   }
 
-  print("DateTime: " + timeToString(barData[i].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
+  # print("DateTime: " + timeToString(barData[i].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
 
   transaction barTransactions[] = getPubTrades(exchangeSetting, symbolSetting, barData[i].timestamp, barData[i].timestamp+barSize);
   currentTran = barTransactions[0];
@@ -354,7 +359,7 @@ void backtest() {
     }
   }
 
-  print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
+  # print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
 
   setCurrentChartsExchange(exchangeSetting);
   setCurrentChartsSymbol(symbolSetting);
@@ -420,12 +425,22 @@ void backtest() {
 
         if (trend == "down") {
           currentOrderId++;
-          print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+          if (currentOrderId == 1) {
+            print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT / 2.0));
+          } else {
+            print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+          }
+
           t.id = currentOrderId;
           t.marker = currentOrderId;
           t.price = currentTran.price + currentTran.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-          t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          if (currentOrderId == 1) {
+            t.amount = AMOUNT;
+            t.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+          } else {
+            t.amount = AMOUNT;
+            t.fee = AMOUNT * t.price * FEE * 0.01;
+          }
           t.tradeTime = currentTran.tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
@@ -435,12 +450,21 @@ void backtest() {
         } 
         else {
           currentOrderId++;
-          print(toString(currentOrderId) + " sell order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+          if (currentOrderId == 1) {
+            print(toString(currentOrderId) + " sell order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT / 2.0));
+          } else {
+            print(toString(currentOrderId) + " sell order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+          }
           t.id = currentOrderId;
           t.marker = currentOrderId;
           t.price = currentTran.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-          t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          if (currentOrderId == 1) {
+            t.amount = AMOUNT;
+            t.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+          } else {
+            t.amount = AMOUNT;
+            t.fee = AMOUNT * t.price * FEE * 0.01;
+          }
           t.tradeTime = currentTran.tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -482,7 +506,7 @@ void backtest() {
 
   print("");
   
-  string tradeListTitle = "Trade\tTime";
+  string tradeListTitle = "\tTrade\tTime";
   tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\t\t");
   tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), symbolSetting);
   tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tMax");
