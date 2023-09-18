@@ -26,7 +26,7 @@ float   AMOUNT          = 1.0;                      # The amount of buy or sell 
 string  STARTDATETIME   = "2023-06-01 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
-float   FEE             = 0.01;                     # taker fee in percentage
+float   FEE             = 0.002;                     # taker fee in percentage
 #############################################
 
 # Trading Variables
@@ -498,10 +498,10 @@ void backtest() {
   float tharpExpectancy = ((winPercentage * averageWin) - (lossPercentage * averageLoss) ) / (averageLoss);
 
   string resultString;
-  if (tharpExpectancy >= EXPECTANCYBASE) {
-    resultString = "PASS";
-  } else {
+  if (tharpExpectancy < EXPECTANCYBASE) {
     resultString = "FAIL";
+  } else {
+    resultString = "PASS";
   }
 
   print("");
