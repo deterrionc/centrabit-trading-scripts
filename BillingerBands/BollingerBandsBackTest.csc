@@ -205,12 +205,36 @@ void onOwnOrderFilledTest(transaction t) {
     entryAmount = amount;
     entryFee = t.fee;
 
+    if (tradeSign == "SE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "green";
+      } else {
+        profitSeriesColor = "red";
+      }
+    }
+
+    if (tradeSign == "LE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "red";
+      } else {
+        profitSeriesColor = "green";
+      }
+    }
+
     if (tradeNumber == 1) {
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
       tradeLogList >> tradeLog;
     } else {
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
       tradeLogList >> tradeLog;
+    }
+
+    if (tradeNumber > 1) {
+      profitSeriesID++;
+      setCurrentSeriesName("Direction" + toString(profitSeriesID));
+      configureLine(false, profitSeriesColor, 2.0);
+      drawChartPoint(entryTran.tradeTime, entryTran.price);
+      drawChartPoint(currentTran.tradeTime, currentTran.price);
     }
     
     entryTran = currentTran;
