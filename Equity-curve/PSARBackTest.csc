@@ -48,7 +48,7 @@ float   lossTotal       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-string  tradeListLog[];
+string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
@@ -138,7 +138,7 @@ void onOwnOrderFilledTest(transaction t) {
         profitSeriesColor="red";
       }
     }
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     profitSeriesID++;
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
@@ -163,7 +163,7 @@ void onOwnOrderFilledTest(transaction t) {
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
     }
 
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     entryTran = currentTran;
   }
@@ -518,8 +518,8 @@ void backtest() {
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeLogListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeListLog); i++) {
-    print(tradeListLog[i]);
+  for (integer i=0; i<sizeof(tradeLogList); i++) {
+    print(tradeLogList[i]);
   }
   print(" ");
   print("--------------------------------------------------------------------------------------------------------------------------");

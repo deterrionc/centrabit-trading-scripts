@@ -144,19 +144,19 @@ void onOwnOrderFilledTest(transaction t) {
       tradeLog += "\tSX\t";
     }
 
-    tradeLogListradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
-    tradeListLog >> tradeLog;
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+    tradeLogList >> tradeLog;
 
     if (tradeSign == "LX") {
       tradeLog = "\tSE\t";
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
-      tradeListLog >> tradeLog;
+      tradeLogList >> tradeLog;
     }
 
     if (tradeSign == "SX") {
       tradeLog = "\tLE\t";
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
-      tradeListLog >> tradeLog;
+      tradeLogList >> tradeLog;
     }
 
     if (profit >= 0.0) {
@@ -169,7 +169,7 @@ void onOwnOrderFilledTest(transaction t) {
       lossTotal += fabs(profit);
       lossCnt++;
       if (profitSeriesColor == "green") {
-    tradeLogListriesColor = "red";
+        profitSeriesColor = "red";
       }
     }
 
@@ -185,12 +185,12 @@ void onOwnOrderFilledTest(transaction t) {
     if (tradeSign == "LX") {
       tradeLog = "\tSX\t";
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
-      tradeListLog >> tradeLog;
+      tradeLogList >> tradeLog;
     }
     if (tradeSign == "SX") {
       tradeLog = "\tLX\t";
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
-      tradeListLog >> tradeLog;
+      tradeLogList >> tradeLog;
     }
 
     tradeLog = "   ";  
@@ -207,10 +207,10 @@ void onOwnOrderFilledTest(transaction t) {
 
     if (tradeNumber == 1) {
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
-      tradeListLog >> tradeLog;
+      tradeLogList >> tradeLog;
     } else {
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
-      tradeListLog >> tradeLog;
+      tradeLogList >> tradeLog;
     }
     
     entryTran = currentTran;
@@ -614,9 +614,9 @@ void backtest() {
         }
       }
     }
-tradeLogList
-    msleeptradeLogList000;
-    if ( msleepFlag == 0)tradeLogList
+
+    msleepFlag = i % 2000;
+    if ( msleepFlag == 0) {
       msleep(20);    
     }
   }
@@ -647,10 +647,10 @@ tradeLogList
   print("");
   print(" ");
 
-  string tradeLogListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
 
   integer now = getCurrentTime();
@@ -659,9 +659,9 @@ tradeLogList
   fwrite(logFile, ",Trade,Time," + symbolSetting + ",," + getBaseCurrencyName(symbolSetting) + "(per),Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,\n");
 
   string logline;
-  for (integer i=0; i<sizeof(tradeListLog); i++) {
-    print(tradeListLog[i]);
-    logline = strreplace(tradeListLog[i], "\t", ",");
+  for (integer i=0; i<sizeof(tradeLogList); i++) {
+    print(tradeLogList[i]);
+    logline = strreplace(tradeLogList[i], "\t", ",");
     logline += "\n";
     fwrite(logFile, logline);
   }
