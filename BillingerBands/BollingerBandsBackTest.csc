@@ -68,6 +68,7 @@ float   minFillOrderPercentage  = 0.0;
 float   maxFillOrderPercentage  = 0.0;
 integer profitSeriesID          = 0;
 string  profitSeriesColor       = "green";
+string  tradeSign               = "";
 transaction currentTran;
 transaction entryTran;
 
@@ -95,6 +96,18 @@ void saveResultToEnv(string accProfit, string expectancy) {
   setVariable("EXPECTANCY", expectancy);  
 }
 
+void printOrderLogs(integer ID, string signal, integer time, float price, float amount, string extra) {
+  print(toString(ID) + " " + signal + "\t[" + timeToString(time, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(price) + "  Amount: " + toString(amount) + extra);
+}
+
+void printFillLogs(transaction t, string totalProfit) {
+  if (totalProfit == "") {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee));
+  } else {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee) + ",  Total profit: " + totalProfit);
+  }
+}
+
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
   feeTotal += t.fee;
@@ -114,23 +127,38 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
+
     string tradeNumStr = toString(tradeNumber);
     for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
     if (t.isAsk == false) {
+      tradeSign = "LX";
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += "\tLX  ";
+      tradeLog += "\tLX\t";
     } else {
+      tradeSign = "SX";
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += "\tSX  ";
+      tradeLog += "\tSX\t";
     }
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(profit) + "\t" + toString(sellTotal - buyTotal - feeTotal);
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+    tradeListLog >> tradeLog;
 
-    string tradeResult;
+    if (tradeSign == "LX") {
+      tradeLog = "\tSE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeListLog >> tradeLog;
+    }
+
+    if (tradeSign == "SX") {
+      tradeLog = "\tLE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeListLog >> tradeLog;
+    }
+
     if (profit >= 0.0) {
       winTotal += profit;
       winCnt++;
@@ -144,7 +172,6 @@ void onOwnOrderFilledTest(transaction t) {
         profitSeriesColor = "red";
       }
     }
-    tradeListLog >> tradeLog;
 
     profitSeriesID++;
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
@@ -153,23 +180,39 @@ void onOwnOrderFilledTest(transaction t) {
     drawChartPoint(currentTran.tradeTime, currentTran.price);
     entryTran = currentTran;
   } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
+
+    if (tradeSign == "LX") {
+      tradeLog = "\tSX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeListLog >> tradeLog;
+    }
+    if (tradeSign == "SX") {
+      tradeLog = "\tLX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeListLog >> tradeLog;
+    }
+
+    tradeLog = "   ";  
     tradeLog += toString(tradeNumber);
     if (t.isAsk == false) {
-      tradeLog += "\tSE  ";
+      tradeSign = "SE";
+      tradeLog += "\tSE\t";
     } else {
-      tradeLog += "\tLE  ";
+      tradeSign = "LE";
+      tradeLog += "\tLE\t";
     }
     entryAmount = amount;
     entryFee = t.fee;
 
     if (tradeNumber == 1) {
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT / 2.0);
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      tradeListLog >> tradeLog;
     } else {
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      tradeListLog >> tradeLog;
     }
     
-    tradeListLog >> tradeLog;
     entryTran = currentTran;
   }
 }
@@ -231,7 +274,8 @@ void onPubOrderFilledTest(transaction t) {
     currentOrderId++;
 
     if (position == "long") {     # Bought -> Sell
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
+
       buyStopped = true;
       # Emulate Sell Order
       transaction filledTransaction;
@@ -239,7 +283,7 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
@@ -252,7 +296,8 @@ void onPubOrderFilledTest(transaction t) {
     }
 
     if (position == "short") {        # Sold -> Buy
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
+
       sellStopped = true;
       # Emulate Buy Order
       transaction filledTransaction;
@@ -260,7 +305,7 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
@@ -295,9 +340,9 @@ void onPubOrderFilledTest(transaction t) {
         currentOrderId++;
 
         if (currentOrderId == 1) {
-          print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+          printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
         } else {
-          print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
         }
 
         # Emulate Sell Order
@@ -306,11 +351,11 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.marker = currentOrderId;
         filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+          filledTransaction.amount = AMOUNT;
+          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.002;
         } else {
           filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+          filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
         }
         filledTransaction.tradeTime = t.tradeTime;
         filledTransaction.isAsk = false;
@@ -352,9 +397,9 @@ void onPubOrderFilledTest(transaction t) {
       if (buySignal) {
         currentOrderId++;
         if (currentOrderId == 1) {
-          print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+          printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
         } else {
-          print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
         }
 
         # emulating buy order filling
@@ -363,11 +408,11 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.marker = currentOrderId;
         filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+          filledTransaction.amount = AMOUNT;
+          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.002;
         } else {
           filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+          filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
         }
         filledTransaction.tradeTime = t.tradeTime;
         filledTransaction.isAsk = true;
@@ -548,7 +593,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT*t.price*FEE * 0.002;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -560,7 +605,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT*t.price*FEE * 0.002;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
@@ -602,7 +647,7 @@ void backtest() {
   print("");
   print(" ");
 
-  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
@@ -611,7 +656,7 @@ void backtest() {
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, "Trade,Time," + symbolSetting + ",Max" + getBaseCurrencyName(symbolSetting) + ",Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,Drawdown,\n");
+  fwrite(logFile, ",Trade,Time," + symbolSetting + ",," + getBaseCurrencyName(symbolSetting) + "(per),Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,\n");
 
   string logline;
   for (integer i=0; i<sizeof(tradeListLog); i++) {
