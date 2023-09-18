@@ -26,7 +26,7 @@ integer SIGNALPERIOD    = 9;
 string  RESOL           = "1m";                             # Bar resolution
 float   AMOUNT          = 0.1;                              # The amount of buy or sell order at once
 string logFilePath      = "c:/macd_log_";                   # Please make sure this path any drive except C:
-string tradeListLogFilePath = "c:/macd_log_tradelist_";     # Please make sure this path any drive except C:
+string tradeLogListFilePath = "c:/macd_log_tradelist_";     # Please make sure this path any drive except C:
 #############################################
 
 # Trading Variables
@@ -49,7 +49,7 @@ float   lossTotal       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-string  tradeListLog[];
+string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
@@ -72,7 +72,7 @@ transaction currentTran;
 transaction entryTran;
 
 file logFile;
-file tradeListLogFile;
+file tradeLogListFile;
 
 
 void main() {
@@ -179,10 +179,10 @@ void main() {
   setCurrentSeriesName("signal");
   configureLine(true, "red", 2.0);
 
-  tradeListLogFilePath = tradeListLogFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
-  tradeListLogFile = fopen(tradeListLogFilePath, "a");
-  fwrite(tradeListLogFile, "Trade,Time," + symbolSetting + ",Max" + getBaseCurrencyName(symbolSetting) + ",Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,Drawdown,\n");
-  fclose(tradeListLogFile);
+  tradeLogListFilePath = tradeLogListFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
+  tradeLogListFile = fopen(tradeLogListFilePath, "a");
+  fwrite(tradeLogListFile, "Trade,Time," + symbolSetting + ",Max" + getBaseCurrencyName(symbolSetting) + ",Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,Drawdown,\n");
+  fclose(tradeLogListFile);
 
   baseCurrencyBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
   quoteCurrencyBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
@@ -341,7 +341,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
         profitSeriesColor="red";
       }
     }
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     profitSeriesID++;
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
@@ -361,7 +361,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
     entryFee = t.fee;
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
 
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     entryTran = currentTran;
   }

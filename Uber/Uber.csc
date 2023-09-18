@@ -84,12 +84,12 @@ void main() {
   logFile = fopen(logFilePath, "a");
   fwrite(logFile, "Profit base," + toString(PROFITBASE) + ",," + "Expectancy base," + toString(EXPECTANCYBASE) + "\n");
 
-  string tradeListTitle = "#\tScript\t\tExchange\tCurrency pair\tAcc Profit\tExpectancy\tDrawdown\tResult";
-  string tradeListLogFileTitle = "#,Script,Exchange,Currency pair,Acc Profit,Expectancy,Drawdown,Result\n";
-  fwrite(logFile, tradeListLogFileTitle);
+  string tradeLogListTitle = "#\tScript\t\tExchange\tCurrency pair\tAcc Profit\tExpectancy\tDrawdown\tResult";
+  string tradeLogListFileTitle = "#,Script,Exchange,Currency pair,Acc Profit,Expectancy,Drawdown,Result\n";
+  fwrite(logFile, tradeLogListFileTitle);
 
   print("===============================================================================================");
-  print(tradeListTitle);
+  print(tradeLogListTitle);
   print("===============================================================================================");
   integer resultIndex = 0;
   string resultText = "";

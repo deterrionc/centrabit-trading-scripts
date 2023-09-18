@@ -46,7 +46,7 @@ float   lossTotal       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-string  tradeListLog[];
+string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
@@ -337,7 +337,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
         profitSeriesColor="red";
       }
     }
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     profitSeriesID++;
     setCurrentChartPosition("0");
@@ -358,7 +358,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
     entryFee = t.fee;
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
 
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     setCurrentChartPosition("0");
     entryTran = currentTran;

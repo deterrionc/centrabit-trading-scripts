@@ -51,7 +51,7 @@ float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 
-string  tradeListLog[];
+string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
@@ -164,7 +164,7 @@ void onOwnOrderFilledTest(transaction t) {
         profitSeriesColor="red";
       }
     }
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     profitSeriesID++;
     setCurrentChartPosition("0");
@@ -185,7 +185,7 @@ void onOwnOrderFilledTest(transaction t) {
     entryFee = t.fee;
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
 
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     setCurrentChartPosition("0");
     entryTran = currentTran;
@@ -578,20 +578,20 @@ void backtest() {
 
   print("");
   
-  string tradeListTitle = "Trade\tTime";
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\t\t");
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), symbolSetting);
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tMax");
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getBaseCurrencyName(symbolSetting));
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tProf");
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getQuoteCurrencyName(symbolSetting));
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tAcc\tDrawdown");
+  string tradeLogListTitle = "Trade\tTime";
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeListTitle);
+  print(tradeLogListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeListLog); i++) {
-    print(tradeListLog[i]);
+  for (integer i=0; i<sizeof(tradeLogList); i++) {
+    print(tradeLogList[i]);
   }
   print(" ");
   print("--------------------------------------------------------------------------------------------------------------------------");

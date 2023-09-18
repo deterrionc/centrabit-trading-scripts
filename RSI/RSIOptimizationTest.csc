@@ -52,7 +52,7 @@ float   lossTotal       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-string  tradeListLog[];
+string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
@@ -115,7 +115,7 @@ void onOwnOrderFilledTest(transaction t) {
       lossTotal += fabs(profit);
       lossCnt ++;
     }
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
   } else {
     print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
     tradeLog += toString(tradeNumber);
@@ -127,7 +127,7 @@ void onOwnOrderFilledTest(transaction t) {
     entryAmount = amount;
     entryFee = t.fee;
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
   }
 }
 
@@ -246,7 +246,7 @@ float backtest() {
   entryAmount = 0.0;
   entryFee = 0.0;
 
-  delete tradeListLog;
+  delete tradeLogList;
   baseCurrencyBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
   quoteCurrencyBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
@@ -308,7 +308,7 @@ float backtest() {
   integer lastUpdatedTimestamp = testTrans[0].tradeTime;
 
   integer timecounter = 0;
-  delete tradeListLog;
+  delete tradeLogList;
 
   for (integer i = 0; i < cnt; i++) {
     if (testTrans[i].tradeTime < timestampToStartLast24Hours) {
@@ -398,13 +398,13 @@ float backtest() {
 
   print("");
   
-  string tradeListTitle = "Trade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
+  string tradeLogListTitle = "Trade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeListTitle);
+  print(tradeLogListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeListLog); i++) {
-    print(tradeListLog[i]);
+  for (integer i=0; i<sizeof(tradeLogList); i++) {
+    print(tradeLogList[i]);
   }
   print(" ");
   print("--------------------------------------------------------------------------------------------------------------------------");

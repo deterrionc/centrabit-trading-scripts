@@ -506,17 +506,17 @@ void backtest() {
 
   print("");
   
-  string tradeListTitle = "\tTrade\tTime";
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\t\t");
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), symbolSetting);
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tMax");
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getBaseCurrencyName(symbolSetting));
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tProf");
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getQuoteCurrencyName(symbolSetting));
-  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tAcc\tDrawdown");
+  string tradeLogListTitle = "\tTrade\tTime";
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeListTitle);
+  print(tradeLogListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeListLog); i++) {
     print(tradeListLog[i]);

@@ -51,7 +51,7 @@ float   lossTotal       = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 float   lastPrice       = 0.0;
-string  tradeListLog[];
+string  tradeLogList[];
 float   barPricesInSMAPeriod[];
 float   baseCurrencyBalance;
 float   quoteCurrencyBalance;
@@ -144,7 +144,7 @@ void onOwnOrderFilledTest(transaction t) {
       tradeLog += "\tSX\t";
     }
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+    tradeLogListradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
     tradeListLog >> tradeLog;
 
     if (tradeSign == "LX") {
@@ -169,7 +169,7 @@ void onOwnOrderFilledTest(transaction t) {
       lossTotal += fabs(profit);
       lossCnt++;
       if (profitSeriesColor == "green") {
-        profitSeriesColor = "red";
+    tradeLogListriesColor = "red";
       }
     }
 
@@ -614,9 +614,9 @@ void backtest() {
         }
       }
     }
-
-    msleepFlag = i % 2000;
-    if ( msleepFlag == 0) {
+tradeLogList
+    msleeptradeLogList000;
+    if ( msleepFlag == 0)tradeLogList
       msleep(20);    
     }
   }
@@ -647,10 +647,10 @@ void backtest() {
   print("");
   print(" ");
 
-  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
+  string tradeLogListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeListTitle);
+  print(tradeLogListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
 
   integer now = getCurrentTime();

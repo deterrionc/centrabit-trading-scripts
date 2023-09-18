@@ -56,7 +56,7 @@ float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 float   barPricesInEMAPeriod[];
-string  tradeListLog[];
+string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 float   lastPrice             = 0.0;
@@ -124,7 +124,7 @@ void onOwnOrderFilledTest(transaction t) {
       lossTotal += fabs(profit);
       lossCnt ++;
     }
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
   } else {
     print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
     tradeLog += toString(tradeNumber);
@@ -137,7 +137,7 @@ void onOwnOrderFilledTest(transaction t) {
     entryFee = t.fee;
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
 
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
   }
 }
 
@@ -391,7 +391,7 @@ float backtest() {
   integer lastUpdatedTimestamp = testTrans[0].tradeTime;
 
   integer timecounter = 0;
-  delete tradeListLog;
+  delete tradeLogList;
 
   setCurrentChartsExchange(exchangeSetting);
   setCurrentChartsSymbol(symbolSetting);
@@ -510,13 +510,13 @@ float backtest() {
 
   print("");
   
-  string tradeListTitle = "Trade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
+  string tradeLogListTitle = "Trade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeListTitle);
+  print(tradeLogListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeListLog); i++) {
-    print(tradeListLog[i]);
+  for (integer i=0; i<sizeof(tradeLogList); i++) {
+    print(tradeLogList[i]);
   }
   print(" ");
   print("--------------------------------------------------------------------------------------------------------------------------");

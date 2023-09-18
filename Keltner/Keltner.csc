@@ -72,7 +72,7 @@ transaction currentTran;
 transaction entryTran;
 integer profitSeriesID = 0;
 string profitSeriesColor = "green";
-string tradeListLog[];
+string tradeLogList[];
 
 
 boolean trailingStopTick(float price) {
@@ -295,7 +295,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
         profitSeriesColor="red";
       }
     }
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     profitSeriesID++;
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
@@ -315,7 +315,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
     entryFee = t.fee;
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
 
-    tradeListLog >> tradeLog;
+    tradeLogList >> tradeLog;
 
     entryTran = currentTran;
   }
