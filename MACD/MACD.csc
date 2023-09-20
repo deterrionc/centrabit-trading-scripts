@@ -167,10 +167,10 @@ void main() {
   setCurrentSeriesName("Buy");
   configureScatter(true, "#7dfd63", "#187206", 7.0,);
 
-  # setCurrentSeriesName("FastEMA");
-  # configureLine(true, "pink", 2.0);
-  # setCurrentSeriesName("SlowEMA");
-  # configureLine(true, "#00ffff", 2.0);
+  setCurrentSeriesName("FastEMA");
+  configureLine(true, "pink", 2.0);
+  setCurrentSeriesName("SlowEMA");
+  configureLine(true, "#00ffff", 2.0);
   
   setCurrentChartPosition("1");
   setChartDataTitle("MACD - " + toString(FASTPERIOD) + ", " + toString(SLOWPERIOD) + ", " + toString(SIGNALPERIOD));
@@ -284,8 +284,8 @@ event onPubOrderFilled(string exchange, transaction t) {
     }
   }
 
-  # drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
-  # drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
+  drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
+  drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
 
   setCurrentChartPosition("1");
   drawChartPointToSeries("macd", t.tradeTime, (macd));
@@ -293,7 +293,6 @@ event onPubOrderFilled(string exchange, transaction t) {
 }
 
 event onOwnOrderFilled(string exchange, transaction t) {
-  print("Own Order Filled");
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
@@ -345,7 +344,6 @@ event onOwnOrderFilled(string exchange, transaction t) {
     tradeLogList >> tradeLog;
 
     profitSeriesID++;
-    setCurrentChartPosition("0");
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);

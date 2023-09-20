@@ -22,7 +22,7 @@ integer SLOWPERIOD      = 26;
 integer SIGNALPERIOD    = 9;
 float   STOPLOSSAT      = 0.05;
 string  RESOL           = "1d";                     # Bar resolution
-float   AMOUNT          = 10.0;                     # The amount of buy or sell order at once
+float   AMOUNT          = 1.0;                      # The amount of buy or sell order at once
 string  STARTDATETIME   = "2023-06-14 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
@@ -53,22 +53,22 @@ string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
-# Additional needs in backtest mode
-float   minFillOrderPercentage = 0.0;
-float   maxFillOrderPercentage = 0.0;
-
 # STOP LOSS
 boolean stopLossFlag    = false;
 boolean stopped         = false;
 
+# Additional needs in backtest mode
+float   minFillOrderPercentage  = 0.0;
+float   maxFillOrderPercentage  = 0.0;
+integer profitSeriesID          = 0;
+string  profitSeriesColor       = "green";
+string  tradeSign               = "";
+transaction currentTran;
+transaction entryTran;
+
 # Starting MACD algo
 setCurrentChartsExchange(exchangeSetting);
 setCurrentChartsSymbol(symbolSetting);
-
-integer profitSeriesID = 0;
-string profitSeriesColor = "green";
-transaction currentTran;
-transaction entryTran;
 
 boolean stopLossTick(float price){
   if (position == "flat" || STOPLOSSAT <= 0.0)
@@ -112,78 +112,147 @@ void saveResultToEnv(string accProfit, string expectancy) {
   setVariable("EXPECTANCY", expectancy);  
 }
 
+void printOrderLogs(integer ID, string signal1, integer time, float price, float amount, string extra) {
+  print(toString(ID) + " " + signal1 + "\t[" + timeToString(time, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(price) + "  Amount: " + toString(amount) + extra);
+}
+
+void printFillLogs(transaction t, string totalProfit) {
+  if (totalProfit == "") {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee));
+  } else {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee) + ",  Total profit: " + totalProfit);
+  }
+}
+
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
-  if (t.isAsk == false) {                # when sell order fillend
+  if (t.isAsk == false) {                   # when sell order fillend
     sellTotal += amount;
     baseCurrencyBalance -= AMOUNT;
     quoteCurrencyBalance += amount;
-  } else {                                 # when buy order fillend
+  } else {                                  # when buy order filled
     buyTotal += amount;
     baseCurrencyBalance += AMOUNT;
     quoteCurrencyBalance -= amount;
   }
 
   integer isOddOrder = t.marker % 2;
-  integer tradeNumber = (t.marker-1) / 2 + 1;
+  integer tradeNumber = (t.marker - 1) / 2 + 1;
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
+
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
     if (t.isAsk == false) {
+      tradeSign = "LX";
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += "\tLX  ";
+      tradeLog += "\tLX\t";
     } else {
+      tradeSign = "SX";
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += "\tSX  ";
+      tradeLog += "\tSX\t";
     }
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(profit) + "\t" + toString(sellTotal - buyTotal - feeTotal);
-
-    string tradeResult;
-    if (profit >= 0.0 ) {
-      winTotal+= profit;
-      winCnt++;
-      if (profitSeriesColor=="red") {
-        profitSeriesColor="green";
-      }
-    } else {
-      lossTotal+= fabs(profit);
-      lossCnt++;
-      if (profitSeriesColor == "green") {
-        profitSeriesColor="red";
-      }
-    }
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
     tradeLogList >> tradeLog;
 
+    if (tradeSign == "LX") {
+      tradeLog = "\tSE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLogList >> tradeLog;
+    }
+
+    if (tradeSign == "SX") {
+      tradeLog = "\tLE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLogList >> tradeLog;
+    }
+
+    if (profit >= 0.0) {
+      winTotal += profit;
+      winCnt++;
+      if (profitSeriesColor == "red") {
+        profitSeriesColor = "green";
+      }
+    } else {
+      lossTotal += fabs(profit);
+      lossCnt++;
+      if (profitSeriesColor == "green") {
+        profitSeriesColor = "red";
+      }
+    }
+
     profitSeriesID++;
-    setCurrentChartPosition("0");
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);
     drawChartPoint(currentTran.tradeTime, currentTran.price);
     entryTran = currentTran;
   } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
+
+    if (tradeSign == "LX") {
+      tradeLog = "\tSX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeLogList >> tradeLog;
+    }
+    if (tradeSign == "SX") {
+      tradeLog = "\tLX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeLogList >> tradeLog;
+    }
+
+    tradeLog = "   ";  
     tradeLog += toString(tradeNumber);
     if (t.isAsk == false) {
-      tradeLog += "\tSE  ";
+      tradeSign = "SE";
+      tradeLog += "\tSE\t";
     } else {
-      tradeLog += "\tLE  ";
+      tradeSign = "LE";
+      tradeLog += "\tLE\t";
     }
     entryAmount = amount;
     entryFee = t.fee;
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
 
-    tradeLogList >> tradeLog;
+    if (tradeSign == "SE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "green";
+      } else {
+        profitSeriesColor = "red";
+      }
+    }
 
+    if (tradeSign == "LE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "red";
+      } else {
+        profitSeriesColor = "green";
+      }
+    }
+
+    if (tradeNumber == 1) {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      tradeLogList >> tradeLog;
+    } else {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      tradeLogList >> tradeLog;
+    }
+
+    if (tradeNumber > 1) {
+      profitSeriesID++;
+      setCurrentSeriesName("Direction" + toString(profitSeriesID));
+      configureLine(false, profitSeriesColor, 2.0);
+      drawChartPoint(entryTran.tradeTime, entryTran.price);
+      drawChartPoint(currentTran.tradeTime, currentTran.price);
+    }
+    
     entryTran = currentTran;
   }
 }
@@ -198,13 +267,13 @@ void onPubOrderFilledTest(transaction t) {
     currentOrderId++;
 
     if (position == "long") {         # Bought -> SELL
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTransaction.fee = AMOUNT * t.price * FEE;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
@@ -217,13 +286,13 @@ void onPubOrderFilledTest(transaction t) {
     }
 
     if (position == "short") {        # Sold -> Buy
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTransaction.fee = AMOUNT * t.price * FEE;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
@@ -257,15 +326,24 @@ void onPubOrderFilledTest(transaction t) {
       stopped = false;
     } else {
       currentOrderId++;
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
-  
+      if (currentOrderId == 1) {
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
+      } else {
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
+      }
+
       # emulating buy order filling
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      if (currentOrderId == 1) {
+        filledTransaction.amount = AMOUNT / 2.0;
+        filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
+      } else {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT * t.price * FEE;
+      }
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
@@ -290,15 +368,24 @@ void onPubOrderFilledTest(transaction t) {
       stopped = false;
     } else {
       currentOrderId++;
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      if (currentOrderId == 1) {
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
+      } else {
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
+      }
 
       # emulating sell order filling
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      if (currentOrderId == 1) {
+        filledTransaction.amount = AMOUNT / 2.0;
+        filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
+      } else {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT * t.price * FEE;
+      }
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
@@ -320,8 +407,8 @@ void onPubOrderFilledTest(transaction t) {
     }
   }
 
-  # drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
-  # drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
+  drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
+  drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
 
   setCurrentChartPosition("1");
   drawChartPointToSeries("macd", t.tradeTime, (macd));
@@ -369,7 +456,7 @@ void backtest() {
 
   integer resolution = interpretResol(RESOL);
 
-  bar barData[] = getTimeBars(exchangeSetting, symbolSetting, testStartTime, SLOWPERIOD + SIGNALPERIOD, resolution * 60 * 1000 * 1000);
+  bar barData[] = getTimeBars(exchangeSetting, symbolSetting, testStartTime, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
 
   setChartBarCount(10);
   setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
@@ -388,10 +475,10 @@ void backtest() {
   setCurrentSeriesName("Buy");
   configureScatter(true, "#7dfd63", "#187206", 7.0,);
 
-  # setCurrentSeriesName("FastEMA");
-  # configureLine(true, "pink", 2.0);
-  # setCurrentSeriesName("SlowEMA");
-  # configureLine(true, "#00ffff", 2.0);
+  setCurrentSeriesName("FastEMA");
+  configureLine(true, "pink", 2.0);
+  setCurrentSeriesName("SlowEMA");
+  configureLine(true, "#00ffff", 2.0);
   
   setCurrentChartPosition("1");
   setChartDataTitle("MACD - " + toString(FASTPERIOD) + ", " + toString(SLOWPERIOD) + ", " + toString(SIGNALPERIOD));
@@ -470,11 +557,11 @@ void backtest() {
       } 
       updateTicker ++;     
     } else {
-        timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
-        if (timecounter > (resolution * 60 * 1000 * 1000)) {
-          onPubOrderFilledTest(testTrans[i]);
-          lastUpdatedTimestamp = testTrans[i].tradeTime;         
-        }
+      timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
+      if (timecounter > (resolution * 60 * 1000 * 1000)) {
+        onPubOrderFilledTest(testTrans[i]);
+        lastUpdatedTimestamp = testTrans[i].tradeTime;         
+      }
     }
 
     if (i == (cnt - 1)) {
@@ -487,7 +574,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -500,7 +587,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
@@ -542,17 +629,10 @@ void backtest() {
 
   print("");
   
-  string tradeLogListTitle = "Trade\tTime";
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(symbolSetting));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(symbolSetting));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
