@@ -53,22 +53,22 @@ string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
-# Additional needs in backtest mode
-float   minFillOrderPercentage = 0.0;
-float   maxFillOrderPercentage = 0.0;
-
 # STOP LOSS
 boolean stopLossFlag    = false;
 boolean stopped         = false;
 
+# Additional needs in backtest mode
+float   minFillOrderPercentage  = 0.0;
+float   maxFillOrderPercentage  = 0.0;
+integer profitSeriesID          = 0;
+string  profitSeriesColor       = "green";
+string  tradeSign               = "";
+transaction currentTran;
+transaction entryTran;
+
 # Starting MACD algo
 setCurrentChartsExchange(exchangeSetting);
 setCurrentChartsSymbol(symbolSetting);
-
-integer profitSeriesID = 0;
-string profitSeriesColor = "green";
-transaction currentTran;
-transaction entryTran;
 
 boolean stopLossTick(float price){
   if (position == "flat" || STOPLOSSAT <= 0.0)
