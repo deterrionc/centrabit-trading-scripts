@@ -619,7 +619,6 @@ float backtest() {
           onOwnOrderFilledTest(t);
           sellCount ++;
           drawChartPointToSeries("Sell", testTrans[i].tradeTime, testTrans[i].price);
-          drawChartPointToSeries("Direction", testTrans[i].tradeTime, testTrans[i].price); 
         } else { # buy order emulation
           print(toString(currentOrderId) + " buy order (" + timeToString(testTrans[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(testTrans[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
@@ -632,7 +631,6 @@ float backtest() {
           onOwnOrderFilledTest(t);
           buyCount ++;
           drawChartPointToSeries("Buy", testTrans[i].tradeTime, testTrans[i].price);
-          drawChartPointToSeries("Direction", testTrans[i].tradeTime, testTrans[i].price); 
         }
       }
     }
