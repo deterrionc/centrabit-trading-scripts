@@ -254,7 +254,7 @@ void onTimeOutTest(integer i) {
       t.marker = currentOrderId;
       t.price = currentTran.price + currentTran.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
       t.amount = AMOUNT;
-      t.fee = AMOUNT*t.price*FEE * 0.01;
+      t.fee = AMOUNT*t.price*FEE;
       t.tradeTime = currentTran.tradeTime;
       t.isAsk = true;
       onOwnOrderFilledTest(t);
@@ -270,7 +270,7 @@ void onTimeOutTest(integer i) {
       t.marker = currentOrderId;
       t.price = currentTran.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
       t.amount = AMOUNT;
-      t.fee = AMOUNT*t.price*FEE * 0.01;
+      t.fee = AMOUNT*t.price*FEE;
       t.tradeTime = currentTran.tradeTime;
       t.isAsk = false;
       onOwnOrderFilledTest(t);
@@ -436,10 +436,10 @@ void backtest() {
           t.price = currentTran.price + currentTran.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           if (currentOrderId == 1) {
             t.amount = AMOUNT / 2.0;
-            t.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+            t.fee = AMOUNT / 2.0 * t.price * FEE;
           } else {
             t.amount = AMOUNT;
-            t.fee = AMOUNT * t.price * FEE * 0.01;
+            t.fee = AMOUNT * t.price * FEE;
           }
           t.tradeTime = currentTran.tradeTime;
           t.isAsk = true;
@@ -460,10 +460,10 @@ void backtest() {
           t.price = currentTran.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           if (currentOrderId == 1) {
             t.amount = AMOUNT / 2.0;
-            t.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+            t.fee = AMOUNT / 2.0 * t.price * FEE;
           } else {
             t.amount = AMOUNT;
-            t.fee = AMOUNT * t.price * FEE * 0.01;
+            t.fee = AMOUNT * t.price * FEE;
           }
           t.tradeTime = currentTran.tradeTime;
           t.isAsk = false;
