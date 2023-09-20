@@ -217,8 +217,8 @@ void onPubOrderFilledTest(transaction t) {
   }
 
   if (drawable) {
-    # drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
-    # drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
+    drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
+    drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
     setCurrentChartPosition("1");
     drawChartPointToSeries("macd", t.tradeTime, (macd));
     drawChartPointToSeries("signal", t.tradeTime, (signal));    
@@ -485,10 +485,10 @@ string optimization() {
   configureScatter(true, "#7dfd63", "#187206", 7.0,);
   setCurrentSeriesName("Direction");
   configureLine(true, "green", 2.0);
-  # setCurrentSeriesName("FastEMA");
-  # configureLine(true, "pink", 2.0);
-  # setCurrentSeriesName("SlowEMA");
-  # configureLine(true, "#00ffff", 2.0);
+  setCurrentSeriesName("FastEMA");
+  configureLine(true, "pink", 2.0);
+  setCurrentSeriesName("SlowEMA");
+  configureLine(true, "#00ffff", 2.0);
   
   setCurrentChartPosition("1");
   setChartDataTitle("MACD - " + toString(FASTPERIOD) + ", " + toString(SLOWPERIOD) + ", " + toString(SIGNALPERIOD));

@@ -23,7 +23,7 @@ integer SIGNALPERIOD    = 9;
 float   STOPLOSSAT      = 0.05;
 string  RESOL           = "1d";                     # Bar resolution
 float   AMOUNT          = 10.0;                     # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-06-14 00:00:00";    # Backtest start datetime
+string  STARTDATETIME   = "2023-03-01 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
 float   FEE             = 0.01;                     # taker fee in percentage
@@ -164,7 +164,6 @@ void onOwnOrderFilledTest(transaction t) {
     tradeLogList >> tradeLog;
 
     profitSeriesID++;
-    setCurrentChartPosition("0");
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);
@@ -180,7 +179,12 @@ void onOwnOrderFilledTest(transaction t) {
     }
     entryAmount = amount;
     entryFee = t.fee;
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+
+    if (tradeNumber == 1) {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT / 2.0);
+    } else {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+    }
 
     tradeLogList >> tradeLog;
 
@@ -257,15 +261,24 @@ void onPubOrderFilledTest(transaction t) {
       stopped = false;
     } else {
       currentOrderId++;
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
-  
+      if (currentOrderId == 1) {
+        print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+      } else {
+        print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      }
+
       # emulating buy order filling
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      if (currentOrderId == 1) {
+        filledTransaction.amount = AMOUNT / 2.0;
+        filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+      } else {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      }
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
@@ -290,15 +303,24 @@ void onPubOrderFilledTest(transaction t) {
       stopped = false;
     } else {
       currentOrderId++;
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      if (currentOrderId == 1) {
+        print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+      } else {
+        print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      }
 
       # emulating sell order filling
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      if (currentOrderId == 1) {
+        filledTransaction.amount = AMOUNT / 2.0;
+        filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+      } else {
+        filledTransaction.amount = AMOUNT;
+        filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      }
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
@@ -320,8 +342,8 @@ void onPubOrderFilledTest(transaction t) {
     }
   }
 
-  # drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
-  # drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
+  drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
+  drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
 
   setCurrentChartPosition("1");
   drawChartPointToSeries("macd", t.tradeTime, (macd));
@@ -369,7 +391,7 @@ void backtest() {
 
   integer resolution = interpretResol(RESOL);
 
-  bar barData[] = getTimeBars(exchangeSetting, symbolSetting, testStartTime, SLOWPERIOD + SIGNALPERIOD, resolution * 60 * 1000 * 1000);
+  bar barData[] = getTimeBars(exchangeSetting, symbolSetting, testStartTime, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
 
   setChartBarCount(10);
   setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
@@ -388,10 +410,10 @@ void backtest() {
   setCurrentSeriesName("Buy");
   configureScatter(true, "#7dfd63", "#187206", 7.0,);
 
-  # setCurrentSeriesName("FastEMA");
-  # configureLine(true, "pink", 2.0);
-  # setCurrentSeriesName("SlowEMA");
-  # configureLine(true, "#00ffff", 2.0);
+  setCurrentSeriesName("FastEMA");
+  configureLine(true, "pink", 2.0);
+  setCurrentSeriesName("SlowEMA");
+  configureLine(true, "#00ffff", 2.0);
   
   setCurrentChartPosition("1");
   setChartDataTitle("MACD - " + toString(FASTPERIOD) + ", " + toString(SLOWPERIOD) + ", " + toString(SIGNALPERIOD));
@@ -542,7 +564,7 @@ void backtest() {
 
   print("");
   
-  string tradeLogListTitle = "Trade\tTime";
+  string tradeLogListTitle = "\tTrade\tTime";
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
