@@ -26,7 +26,7 @@ string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                   # Stop loss point at percentage
 boolean USETRAILINGSTOP = false;                  # Trailing stop flag
 float   EXPECTANCYBASE  = 0.1;                    # expectancy base
-float   FEE             = 0.01;                   # taker fee in percentage
+float   FEE             = 0.002;                  # taker fee in percentage
 #############################################
 
 # Trading Variables
@@ -304,7 +304,7 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
+      filledTransaction.fee = AMOUNT * t.price * FEE;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
@@ -325,7 +325,7 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
+      filledTransaction.fee = AMOUNT * t.price * FEE;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
@@ -371,10 +371,10 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
         if (currentOrderId == 1) {
           filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.002;
+          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
         } else {
           filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
+          filledTransaction.fee = AMOUNT * t.price * FEE;
         }
         filledTransaction.tradeTime = t.tradeTime;
         filledTransaction.isAsk = false;
@@ -428,10 +428,10 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
         if (currentOrderId == 1) {
           filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.002;
+          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
         } else {
           filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
+          filledTransaction.fee = AMOUNT * t.price * FEE;
         }
         filledTransaction.tradeTime = t.tradeTime;
         filledTransaction.isAsk = true;
@@ -613,7 +613,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.002;
+          t.fee = AMOUNT*t.price*FEE;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -625,7 +625,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.002;
+          t.fee = AMOUNT*t.price*FEE;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
@@ -667,10 +667,10 @@ float backtest() {
   print("");
   print(" ");
 
-  string tradeLogListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
