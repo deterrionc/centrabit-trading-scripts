@@ -22,11 +22,12 @@ float   AFINIT          = 0.02;
 float   AFMAX           = 0.2;
 float   AFSTEP          = 0.02;
 string  RESOL           = "1d";                     # Bar resolution
-float   AMOUNT          = 1.0;                      # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-06-01 00:00:00";    # Backtest start datetime
-string  ENDDATETIME     = "now";                    # Backtest end datetime
+float   BALANCE         = 100.0;                    # Backtest Balance
+float   AMOUNT          = 10.0;                     # The amount of buy or sell order at once
+string  STARTDATETIME   = "2023-03-01 00:00:00";    # Backtest start datetime
+string  ENDDATETIME     = "2023-06-01 00:00:00";    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
-float   FEE             = 0.01;                     # taker fee in percentage
+float   FEE             = 0.002;                    # taker fee in percentage
 #############################################
 
 # Trading Variables
@@ -41,6 +42,7 @@ integer buyCount        = 0;
 integer sellCount       = 0;
 integer winCnt          = 0;
 integer lossCnt         = 0;
+float   totalProfit     = 0.0;
 float   buyTotal        = 0.0;
 float   sellTotal       = 0.0;
 float   winTotal        = 0.0;
@@ -96,10 +98,12 @@ void onOwnOrderFilledTest(transaction t) {
   if (t.isAsk == false) {                # when sell order fillend
     sellTotal += amount;
     baseCurrencyBalance -= AMOUNT;
+    BALANCE -= AMOUNT;
     quoteCurrencyBalance += amount;
   } else {                                 # when buy order fillend
     buyTotal += amount;
     baseCurrencyBalance += AMOUNT;
+    BALANCE += AMOUNT;
     quoteCurrencyBalance -= amount;
   }
 
@@ -126,7 +130,7 @@ void onOwnOrderFilledTest(transaction t) {
 
     string tradeResult;
     if (profit >= 0.0 ) {
-      winTotal+= profit;
+      winTotal += profit;
       winCnt++;
       if (profitSeriesColor=="red") {
         profitSeriesColor="green";
@@ -140,11 +144,21 @@ void onOwnOrderFilledTest(transaction t) {
     }
     tradeLogList >> tradeLog;
 
+    totalProfit += profit;
+
     profitSeriesID++;
+    setCurrentChartPosition("0");
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);
     drawChartPoint(currentTran.tradeTime, currentTran.price);
+    # print(totalProfit);
+
+    setCurrentChartPosition("1");
+    setCurrentSeriesName("Balance");
+    drawChartPoint(currentTran.tradeTime, BALANCE + totalProfit);
+    setCurrentSeriesName("Change");
+    drawChartPoint(currentTran.tradeTime, BALANCE + totalProfit);
     entryTran = currentTran;
   } else {
     print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
@@ -166,6 +180,12 @@ void onOwnOrderFilledTest(transaction t) {
     tradeLogList >> tradeLog;
 
     entryTran = currentTran;
+
+    setCurrentChartPosition("1");
+    setCurrentSeriesName("Balance");
+    drawChartPoint(currentTran.tradeTime, BALANCE);
+    setCurrentSeriesName("Change");
+    drawChartPoint(currentTran.tradeTime, BALANCE);
   }
 }
 
@@ -239,14 +259,13 @@ void onTimeOutTest(integer i) {
     }
   }
 
-  # print("DateTime: " + timeToString(barData[i].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
-
   transaction barTransactions[] = getPubTrades(exchangeSetting, symbolSetting, barData[i].timestamp, barData[i].timestamp+barSize);
   currentTran = barTransactions[0];
   transaction t;
 
   if (trend == "up") {
-    drawChartPointToSeries("Upword", barData[i].timestamp, psar);
+    setCurrentChartPosition("0");
+    drawChartPointToSeries("Upward", barData[i].timestamp, psar);
     if (oldTrend != "up") {
       currentOrderId++;
       print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
@@ -259,9 +278,11 @@ void onTimeOutTest(integer i) {
       t.isAsk = true;
       onOwnOrderFilledTest(t);
       buyCount ++;
+      setCurrentChartPosition("0");
       drawChartPointToSeries("Buy", currentTran.tradeTime, currentTran.price);      
     }
   } else {
+    setCurrentChartPosition("0");
     drawChartPointToSeries("Downward", barData[i].timestamp, psar);
     if (oldTrend != "down") {
       currentOrderId++;
@@ -275,6 +296,7 @@ void onTimeOutTest(integer i) {
       t.isAsk = false;
       onOwnOrderFilledTest(t);
       sellCount ++;
+      setCurrentChartPosition("0");
       drawChartPointToSeries("Sell", currentTran.tradeTime, currentTran.price);
     }
   }
@@ -359,13 +381,10 @@ void backtest() {
     }
   }
 
-  # print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
-
   setCurrentChartsExchange(exchangeSetting);
   setCurrentChartsSymbol(symbolSetting);
   clearCharts();
 
-  # setChartBarCount(10);
   setChartBarWidth(barSize);
   setChartTime(barData[0].timestamp +  777600000000); # 10min * 9
 
@@ -374,13 +393,22 @@ void backtest() {
   setCurrentSeriesName("Sell");
   configureScatter(true, "red", "red", 7.0);
   setCurrentSeriesName("Buy");
-  configureScatter(true, "#7dfd63", "#187206", 7.0,);
-  setCurrentSeriesName("Upword");
+  configureScatter(true, "#7dfd63", "#187206", 7.0);
+  setCurrentSeriesName("Upward");
   configureScatter(true, "#faf849", "#6d6c0d", 7.0);
   setCurrentSeriesName("Downward");
-  configureScatter(true, "#6beafd", "#095b67", 7.0,);
+  configureScatter(true, "#6beafd", "#095b67", 7.0);
   setCurrentSeriesName("Direction");
   configureLine(true, "green", 2.0);
+
+  setCurrentChartPosition("1");
+  setChartDataTitle(getBaseCurrencyName(symbolSetting) + " Balance");
+  setChartYRange(0.0, 200.0); 
+  setCurrentSeriesName("Balance");
+  configureLine(true, "green", 2.0);
+  setCurrentSeriesName("Change");
+  configureScatter(true, "red", "red", 7.0);
+  
 
   float minAskOrderPrice = getOrderBookAsk(exchangeSetting, symbolSetting);
   float maxBidOrderPrice = getOrderBookBid(exchangeSetting, symbolSetting);
@@ -403,11 +431,16 @@ void backtest() {
 
   currentOrderId = 0;
 
+  setCurrentChartPosition("0");
   if (trend == "up") {
-    drawChartPointToSeries("Upword", barData[2].timestamp, psar);
+    drawChartPointToSeries("Upward", barData[2].timestamp, psar);
   } else {
     drawChartPointToSeries("Downward", barData[2].timestamp, psar);
   }
+
+  setCurrentChartPosition("1");
+  setCurrentSeriesName("Balance");
+  drawChartPoint(barData[2].timestamp, BALANCE);
 
   integer msleepFlag = 0;
   integer shouldBePositionClosed;
@@ -445,8 +478,8 @@ void backtest() {
           t.isAsk = true;
           onOwnOrderFilledTest(t);
           buyCount ++;
+          setCurrentChartPosition("0");
           drawChartPointToSeries("Buy", currentTran.tradeTime, currentTran.price);      
-          drawChartPointToSeries("Direction", currentTran.tradeTime, currentTran.price); 
         } 
         else {
           currentOrderId++;
@@ -469,8 +502,8 @@ void backtest() {
           t.isAsk = false;
           onOwnOrderFilledTest(t);
           sellCount ++;
+          setCurrentChartPosition("0");
           drawChartPointToSeries("Sell", currentTran.tradeTime, currentTran.price);
-          drawChartPointToSeries("Direction", currentTran.tradeTime, currentTran.price); 
         }
       }
     }
@@ -498,10 +531,10 @@ void backtest() {
   float tharpExpectancy = ((winPercentage * averageWin) - (lossPercentage * averageLoss) ) / (averageLoss);
 
   string resultString;
-  if (tharpExpectancy >= EXPECTANCYBASE) {
-    resultString = "PASS";
-  } else {
+  if (tharpExpectancy < EXPECTANCYBASE) {
     resultString = "FAIL";
+  } else {
+    resultString = "PASS";
   }
 
   print("");
