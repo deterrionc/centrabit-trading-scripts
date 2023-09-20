@@ -63,6 +63,7 @@ float   lockedPriceForProfit    = 0.0;
 float   minFillOrderPercentage  = 0.0;
 float   maxFillOrderPercentage  = 0.0;
 string  profitSeriesColor       = "green";
+string  tradeSign               = "";
 integer profitSeriesID          = 0;
 bar     lastBar;
 transaction transactions[];
@@ -122,7 +123,7 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
     for (integer i=0; i<strlength(tradeNumStr); i++) {
       tradeLog += " ";
