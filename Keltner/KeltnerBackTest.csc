@@ -108,52 +108,66 @@ void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
-  if (t.isAsk == false) {                # when sell order fillend
+  if (t.isAsk == false) {                   # when sell order fillend
     sellTotal += amount;
     baseCurrencyBalance -= AMOUNT;
     quoteCurrencyBalance += amount;
-  } else {                                 # when buy order fillend
+  } else {                                  # when buy order filled
     buyTotal += amount;
     baseCurrencyBalance += AMOUNT;
     quoteCurrencyBalance -= amount;
   }
 
   integer isOddOrder = t.marker % 2;
-  integer tradeNumber = (t.marker-1) / 2 + 1;
+  integer tradeNumber = (t.marker - 1) / 2 + 1;
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
     printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
+
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
     if (t.isAsk == false) {
+      tradeSign = "LX";
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += "\tLX  ";
+      tradeLog += "\tLX\t";
     } else {
+      tradeSign = "SX";
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += "\tSX  ";
+      tradeLog += "\tSX\t";
     }
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(profit) + "\t" + toString(sellTotal - buyTotal - feeTotal);
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+    tradeLogList >> tradeLog;
 
-    string tradeResult;
-    if (profit >= 0.0 ) {
-      winTotal+= profit;
+    if (tradeSign == "LX") {
+      tradeLog = "\tSE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLogList >> tradeLog;
+    }
+
+    if (tradeSign == "SX") {
+      tradeLog = "\tLE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLogList >> tradeLog;
+    }
+
+    if (profit >= 0.0) {
+      winTotal += profit;
       winCnt++;
-      if (profitSeriesColor=="red") {
-        profitSeriesColor="green";
+      if (profitSeriesColor == "red") {
+        profitSeriesColor = "green";
       }
     } else {
-      lossTotal+= fabs(profit);
+      lossTotal += fabs(profit);
       lossCnt++;
       if (profitSeriesColor == "green") {
-        profitSeriesColor="red";
+        profitSeriesColor = "red";
       }
     }
-    tradeLogList >> tradeLog;
 
     profitSeriesID++;
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
@@ -162,24 +176,63 @@ void onOwnOrderFilledTest(transaction t) {
     drawChartPoint(currentTran.tradeTime, currentTran.price);
     entryTran = currentTran;
   } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
+
+    if (tradeSign == "LX") {
+      tradeLog = "\tSX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeLogList >> tradeLog;
+    }
+    if (tradeSign == "SX") {
+      tradeLog = "\tLX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      tradeLogList >> tradeLog;
+    }
+
+    tradeLog = "   ";  
     tradeLog += toString(tradeNumber);
     if (t.isAsk == false) {
-      tradeLog += "\tSE  ";
+      tradeSign = "SE";
+      tradeLog += "\tSE\t";
     } else {
-      tradeLog += "\tLE  ";
+      tradeSign = "LE";
+      tradeLog += "\tLE\t";
     }
     entryAmount = amount;
     entryFee = t.fee;
 
-    if (tradeNumber == 1) {
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT / 2.0);
-    } else {
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+    if (tradeSign == "SE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "green";
+      } else {
+        profitSeriesColor = "red";
+      }
     }
 
-    tradeLogList >> tradeLog;
+    if (tradeSign == "LE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "red";
+      } else {
+        profitSeriesColor = "green";
+      }
+    }
 
+    if (tradeNumber == 1) {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      tradeLogList >> tradeLog;
+    } else {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      tradeLogList >> tradeLog;
+    }
+
+    if (tradeNumber > 1) {
+      profitSeriesID++;
+      setCurrentSeriesName("Direction" + toString(profitSeriesID));
+      configureLine(false, profitSeriesColor, 2.0);
+      drawChartPoint(entryTran.tradeTime, entryTran.price);
+      drawChartPoint(currentTran.tradeTime, currentTran.price);
+    }
+    
     entryTran = currentTran;
   }
 }
@@ -243,7 +296,7 @@ void onPubOrderFilledTest(transaction t) {
     currentOrderId++;
 
     if (position == "long") {     # Bought -> Sell
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       buyStopped = true;
       # Emulate Sell Order
       transaction filledTransaction;
