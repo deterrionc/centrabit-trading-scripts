@@ -23,7 +23,7 @@ float   AFMAX           = 0.2;
 float   AFSTEP          = 0.02;
 string  RESOL           = "1d";                     # Bar resolution
 float   AMOUNT          = 1.0;                      # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-03-01 00:00:00";    # Backtest start datetime
+string  STARTDATETIME   = "2023-06-14 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
 float   FEE             = 0.002;                    # taker fee in percentage
@@ -304,8 +304,6 @@ void onTimeOutTest(integer i) {
     }
   }
 
-  # print("DateTime: " + timeToString(barData[i].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
-
   transaction barTransactions[] = getPubTrades(exchangeSetting, symbolSetting, barData[i].timestamp, barData[i].timestamp+barSize);
   currentTran = barTransactions[0];
   transaction t;
@@ -314,7 +312,8 @@ void onTimeOutTest(integer i) {
     drawChartPointToSeries("Upword", barData[i].timestamp, psar);
     if (oldTrend != "up") {
       currentOrderId++;
-      print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+      printOrderLogs(currentOrderId, "Buy", currentTran.tradeTime, currentTran.price, AMOUNT, "");
+      # print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
       t.id = currentOrderId;
       t.marker = currentOrderId;
       t.price = currentTran.price + currentTran.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
@@ -330,7 +329,8 @@ void onTimeOutTest(integer i) {
     drawChartPointToSeries("Downward", barData[i].timestamp, psar);
     if (oldTrend != "down") {
       currentOrderId++;
-      print(toString(currentOrderId) + " sell order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+      printOrderLogs(currentOrderId, "Sell", currentTran.tradeTime, currentTran.price, AMOUNT, "");
+      # print(toString(currentOrderId) + " sell order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
       t.id = currentOrderId;
       t.marker = currentOrderId;
       t.price = currentTran.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
