@@ -53,19 +53,19 @@ float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurr
 float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
 
 # Additional needs in backtest mode
-float   minFillOrderPercentage = 0.0;
-float   maxFillOrderPercentage = 0.0;
+float   minFillOrderPercentage  = 0.0;
+float   maxFillOrderPercentage  = 0.0;
+integer profitSeriesID          = 0;
+string  profitSeriesColor       = "green";
+string  tradeSign               = "";
+transaction currentTran;
+transaction entryTran;
 
 boolean reversed;
 
 bar barData[];
 integer resolution = interpretResol(RESOL);
 integer barSize = resolution * 60 * 1000 * 1000;
-
-integer profitSeriesID = 0;
-string profitSeriesColor = "green";
-transaction currentTran;
-transaction entryTran;
 
 void initCommonParameters() {
   if (toBoolean(getVariable("EXCHANGE"))) 
@@ -87,6 +87,18 @@ void initCommonParameters() {
 void saveResultToEnv(string accProfit, string expectancy) {
   setVariable("ACCPROFIT", accProfit);
   setVariable("EXPECTANCY", expectancy);  
+}
+
+void printOrderLogs(integer ID, string signal, integer time, float price, float amount, string extra) {
+  print(toString(ID) + " " + signal + "\t[" + timeToString(time, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(price) + "  Amount: " + toString(amount) + extra);
+}
+
+void printFillLogs(transaction t, string totalProfit) {
+  if (totalProfit == "") {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee));
+  } else {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee) + ",  Total profit: " + totalProfit);
+  }
 }
 
 void onOwnOrderFilledTest(transaction t) {
