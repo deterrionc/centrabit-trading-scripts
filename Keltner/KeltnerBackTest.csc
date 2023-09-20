@@ -304,7 +304,7 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
@@ -325,7 +325,7 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.marker = currentOrderId;
       filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
       filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
@@ -359,9 +359,9 @@ void onPubOrderFilledTest(transaction t) {
       if (sellSignal) {
         currentOrderId++;
         if (currentOrderId == 1) {
-          print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+          printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
         } else {
-          print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
         }
 
         # Emulate Sell Order
@@ -371,10 +371,10 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
         if (currentOrderId == 1) {
           filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.002;
         } else {
           filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+          filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
         }
         filledTransaction.tradeTime = t.tradeTime;
         filledTransaction.isAsk = false;
@@ -416,9 +416,9 @@ void onPubOrderFilledTest(transaction t) {
       if (buySignal) {
         currentOrderId++;
         if (currentOrderId == 1) {
-          print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+          printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
         } else {
-          print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
         }
     
         # emulating buy order filling
@@ -428,10 +428,10 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
         if (currentOrderId == 1) {
           filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.01;
+          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE * 0.002;
         } else {
           filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
+          filledTransaction.fee = AMOUNT * t.price * FEE * 0.002;
         }
         filledTransaction.tradeTime = t.tradeTime;
         filledTransaction.isAsk = true;
@@ -613,7 +613,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT*t.price*FEE * 0.002;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -626,7 +626,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT*t.price*FEE * 0.002;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
