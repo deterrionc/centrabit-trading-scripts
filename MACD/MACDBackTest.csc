@@ -112,8 +112,8 @@ void saveResultToEnv(string accProfit, string expectancy) {
   setVariable("EXPECTANCY", expectancy);  
 }
 
-void printOrderLogs(integer ID, string signal, integer time, float price, float amount, string extra) {
-  print(toString(ID) + " " + signal + "\t[" + timeToString(time, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(price) + "  Amount: " + toString(amount) + extra);
+void printOrderLogs(integer ID, string signal1, integer time, float price, float amount, string extra) {
+  print(toString(ID) + " " + signal1 + "\t[" + timeToString(time, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(price) + "  Amount: " + toString(amount) + extra);
 }
 
 void printFillLogs(transaction t, string totalProfit) {
@@ -267,7 +267,7 @@ void onPubOrderFilledTest(transaction t) {
     currentOrderId++;
 
     if (position == "long") {         # Bought -> SELL
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
@@ -286,7 +286,7 @@ void onPubOrderFilledTest(transaction t) {
     }
 
     if (position == "short") {        # Sold -> Buy
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       transaction filledTransaction;
       filledTransaction.id = currentOrderId;
       filledTransaction.marker = currentOrderId;
@@ -327,9 +327,9 @@ void onPubOrderFilledTest(transaction t) {
     } else {
       currentOrderId++;
       if (currentOrderId == 1) {
-        print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
       } else {
-        print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
       }
 
       # emulating buy order filling
@@ -369,9 +369,9 @@ void onPubOrderFilledTest(transaction t) {
     } else {
       currentOrderId++;
       if (currentOrderId == 1) {
-        print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT / 2.0));
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
       } else {
-        print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
       }
 
       # emulating sell order filling
@@ -557,11 +557,11 @@ void backtest() {
       } 
       updateTicker ++;     
     } else {
-        timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
-        if (timecounter > (resolution * 60 * 1000 * 1000)) {
-          onPubOrderFilledTest(testTrans[i]);
-          lastUpdatedTimestamp = testTrans[i].tradeTime;         
-        }
+      timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
+      if (timecounter > (resolution * 60 * 1000 * 1000)) {
+        onPubOrderFilledTest(testTrans[i]);
+        lastUpdatedTimestamp = testTrans[i].tradeTime;         
+      }
     }
 
     if (i == (cnt - 1)) {
@@ -574,7 +574,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -587,7 +587,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = testTrans[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
@@ -629,17 +629,10 @@ void backtest() {
 
   print("");
   
-  string tradeLogListTitle = "\tTrade\tTime";
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(symbolSetting));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(symbolSetting));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
