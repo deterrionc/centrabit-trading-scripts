@@ -424,13 +424,10 @@ void backtest() {
     }
   }
 
-  # print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
-
   setCurrentChartsExchange(exchangeSetting);
   setCurrentChartsSymbol(symbolSetting);
   clearCharts();
 
-  # setChartBarCount(10);
   setChartBarWidth(barSize);
   setChartTime(barData[0].timestamp +  777600000000); # 10min * 9
 
@@ -491,9 +488,9 @@ void backtest() {
         if (trend == "down") {
           currentOrderId++;
           if (currentOrderId == 1) {
-            print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT / 2.0));
+            printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
           } else {
-            print(toString(currentOrderId) + " buy order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+            printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
           }
 
           t.id = currentOrderId;
@@ -516,9 +513,9 @@ void backtest() {
         else {
           currentOrderId++;
           if (currentOrderId == 1) {
-            print(toString(currentOrderId) + " sell order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT / 2.0));
+            printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
           } else {
-            print(toString(currentOrderId) + " sell order (" + timeToString(currentTran.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(currentTran.price) + "  amount: "+ toString(AMOUNT));
+            printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
           }
           t.id = currentOrderId;
           t.marker = currentOrderId;
@@ -571,17 +568,10 @@ void backtest() {
 
   print("");
   
-  string tradeLogListTitle = "\tTrade\tTime";
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(symbolSetting));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(symbolSetting));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
