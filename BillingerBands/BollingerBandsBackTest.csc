@@ -652,7 +652,6 @@ void backtest() {
   float winLossRatio = toFloat(winCnt) / toFloat(lossCnt);
   float winRatio = toFloat(winCnt) / toFloat(totalCnt);
   float lossRatio = toFloat(lossCnt) / toFloat(totalCnt);
-  float expectancyRatio = rewardToRiskRatio * winRatio - lossRatio;
   float averageWin = winTotal / toFloat(winCnt);
   float averageLoss = lossTotal / toFloat(lossCnt);
   float tharpExpectancy = ((winRatio * averageWin) - (lossRatio * averageLoss) ) / (averageLoss);
