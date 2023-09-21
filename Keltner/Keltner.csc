@@ -112,6 +112,11 @@ void updateKeltner() {
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+
   integer duration = t.tradeTime - lastBarTickedTime;
   
   if (duration < resolution * 60000000) {
@@ -247,6 +252,11 @@ event onPubOrderFilled(string exchange, transaction t) {
 }
 
 event onOwnOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+  
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
