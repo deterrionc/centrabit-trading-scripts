@@ -125,6 +125,11 @@ boolean trailingStopTick(float price) {
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+
   drawChartPointToSeries("Middle", t.tradeTime, sma);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
@@ -235,6 +240,11 @@ event onPubOrderFilled(string exchange, transaction t) {
 }
 
 event onOwnOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+  
   setVariable("inProcess", "0");
   float amount = t.price * t.amount;
   feeTotal += t.fee;
