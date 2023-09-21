@@ -191,6 +191,11 @@ void main() {
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+
   currentTran = t;
   setCurrentChartPosition("0");
 
@@ -293,6 +298,11 @@ event onPubOrderFilled(string exchange, transaction t) {
 }
 
 event onOwnOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+  
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
