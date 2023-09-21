@@ -606,19 +606,14 @@ void backtest() {
 
   setChartsPairBuffering(false);
 
+  integer totalCnt = winCnt + lossCnt;
   float rewardToRiskRatio = winTotal / lossTotal;
   float winLossRatio = toFloat(winCnt) / toFloat(lossCnt);
-  float winRatio = toFloat(winCnt) / toFloat(winCnt+lossCnt);
-  float lossRatio = toFloat(lossCnt) / toFloat(winCnt+lossCnt);
-  float expectancyRatio = rewardToRiskRatio * winRatio - lossRatio;
-
+  float winRatio = toFloat(winCnt) / toFloat(totalCnt);
+  float lossRatio = toFloat(lossCnt) / toFloat(totalCnt);
   float averageWin = winTotal / toFloat(winCnt);
   float averageLoss = lossTotal / toFloat(lossCnt);
-  integer totalCnt = winCnt + lossCnt;
-  float winPercentage = toFloat(winCnt) / toFloat(totalCnt);
-  float lossPercentage = toFloat(lossCnt) / toFloat(totalCnt);
-
-  float tharpExpectancy = ((winPercentage * averageWin) - (lossPercentage * averageLoss) ) / (averageLoss);
+  float tharpExpectancy = ((winRatio * averageWin) - (lossRatio * averageLoss) ) / (averageLoss);
 
   string resultString;
   if (tharpExpectancy >= EXPECTANCYBASE) {
