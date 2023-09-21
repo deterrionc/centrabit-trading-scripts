@@ -37,12 +37,12 @@ string  prevPosition    = "";         # "", "long", "short"
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
-integer winCnt          = 0;
-integer lossCnt         = 0;
+integer winCount          = 0;
+integer lossCount         = 0;
 float   buyTotal        = 0.0;
 float   sellTotal       = 0.0;
-float   winTotal        = 0.0;
-float   lossTotal       = 0.0;
+float   totalWin        = 0.0;
+float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
@@ -325,14 +325,14 @@ event onOwnOrderFilled(string exchange, transaction t) {
 
     string tradeResult;
     if (profit >= 0.0 ) {
-      winTotal+= profit;
-      winCnt++;
+      totalWin+= profit;
+      winCount++;
       if (profitSeriesColor=="red") {
         profitSeriesColor="green";
       }
     } else {
-      lossTotal+= fabs(profit);
-      lossCnt++;
+      totalLoss+= fabs(profit);
+      lossCount++;
       if (profitSeriesColor == "green") {
         profitSeriesColor="red";
       }

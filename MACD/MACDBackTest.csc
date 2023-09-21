@@ -40,12 +40,12 @@ float   histogram       = 0.0;
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
-integer winCnt          = 0;
-integer lossCnt         = 0;
+integer winCount          = 0;
+integer lossCount         = 0;
 float   buyTotal        = 0.0;
 float   sellTotal       = 0.0;
-float   winTotal        = 0.0;
-float   lossTotal       = 0.0;
+float   totalWin        = 0.0;
+float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
@@ -176,14 +176,14 @@ void onOwnOrderFilledTest(transaction t) {
     }
 
     if (profit >= 0.0) {
-      winTotal += profit;
-      winCnt++;
+      totalWin += profit;
+      winCount++;
       if (profitSeriesColor == "red") {
         profitSeriesColor = "green";
       }
     } else {
-      lossTotal += fabs(profit);
-      lossCnt++;
+      totalLoss += fabs(profit);
+      lossCount++;
       if (profitSeriesColor == "green") {
         profitSeriesColor = "red";
       }
@@ -606,13 +606,13 @@ void backtest() {
 
   setChartsPairBuffering(false);
 
-  integer totalCnt = winCnt + lossCnt;
-  float rewardToRiskRatio = winTotal / lossTotal;
-  float winLossRatio = toFloat(winCnt) / toFloat(lossCnt);
-  float winRatio = toFloat(winCnt) / toFloat(totalCnt);
-  float lossRatio = toFloat(lossCnt) / toFloat(totalCnt);
-  float averageWin = winTotal / toFloat(winCnt);
-  float averageLoss = lossTotal / toFloat(lossCnt);
+  integer totalCount = winCount + lossCount;
+  float rewardToRiskRatio = totalWin / totalLoss;
+  float winLossRatio = toFloat(winCount) / toFloat(lossCount);
+  float winRatio = toFloat(winCount) / toFloat(totalCount);
+  float lossRatio = toFloat(lossCount) / toFloat(totalCount);
+  float averageWin = totalWin / toFloat(winCount);
+  float averageLoss = totalLoss / toFloat(lossCount);
   float tharpExpectancy = ((winRatio * averageWin) - (lossRatio * averageLoss) ) / (averageLoss);
 
   string resultString;
