@@ -55,12 +55,12 @@ string  prevPosition    = "";    # "", "long", "short"
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
-integer winCnt          = 0;
-integer lossCnt         = 0;
+integer winCount          = 0;
+integer lossCount         = 0;
 float   buyTotal        = 0.0;
 float   sellTotal       = 0.0;
-float   winTotal        = 0.0;
-float   lossTotal       = 0.0;
+float   totalWin        = 0.0;
+float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
@@ -124,11 +124,11 @@ void onOwnOrderFilledTest(transaction t) {
 
     string tradeResult;
     if (profit >= 0.0 ) {
-      winTotal += profit;
-      winCnt ++;
+      totalWin += profit;
+      winCount ++;
     } else {
-      lossTotal += fabs(profit);
-      lossCnt ++;
+      totalLoss += fabs(profit);
+      lossCount ++;
     }
     tradeLogList >> tradeLog;
   } else {
@@ -365,17 +365,17 @@ float backtest() {
 
   setChartsPairBuffering(false);
 
-  float rewardToRiskRatio = winTotal / lossTotal;
-  float winLossRatio = toFloat(winCnt) / toFloat(lossCnt);
-  float winRatio = toFloat(winCnt) / toFloat(winCnt+lossCnt);
-  float lossRatio = toFloat(lossCnt) / toFloat(winCnt+lossCnt);
+  float rewardToRiskRatio = totalWin / totalLoss;
+  float winLossRatio = toFloat(winCount) / toFloat(lossCount);
+  float winRatio = toFloat(winCount) / toFloat(winCount+lossCount);
+  float lossRatio = toFloat(lossCount) / toFloat(winCount+lossCount);
   float expectancyRatio = rewardToRiskRatio * winRatio - lossRatio;
 
-  float averageWin = winTotal / toFloat(winCnt);
-  float averageLoss = lossTotal / toFloat(lossCnt);
-  integer totalCnt = winCnt + lossCnt;
-  float winPercentage = toFloat(winCnt) / toFloat(totalCnt);
-  float lossPercentage = toFloat(lossCnt) / toFloat(totalCnt);
+  float averageWin = totalWin / toFloat(winCount);
+  float averageLoss = totalLoss / toFloat(lossCount);
+  integer totalCount = winCount + lossCount;
+  float winPercentage = toFloat(winCount) / toFloat(totalCount);
+  float lossPercentage = toFloat(lossCount) / toFloat(totalCount);
 
   float tharpExpectancy = ((winPercentage * averageWin) - (lossPercentage * averageLoss) ) / (averageLoss);
 
