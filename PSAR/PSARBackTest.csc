@@ -578,6 +578,7 @@ void backtest() {
   print("Win Ratio  : " + toString(winRatio));
   print("Loss Ratio : " + toString(lossRatio));
   print("Expectancy : " + toString(tharpExpectancy));
+  print("Expected : " + toString(EXPECTANCYBASE));
   print(" ");
   print("Result : " + resultString);
 
