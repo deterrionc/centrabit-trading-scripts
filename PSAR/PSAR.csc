@@ -65,6 +65,11 @@ integer lastBarTickedTime;
 transaction transactions[];
 
 event onOwnOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
@@ -232,24 +237,25 @@ void main() {
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
-  # print("On Pub Order Filled");
+  # Check exchange and currency is correct when order filled
+  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+    return;
+  }
+  
   integer between = t.tradeTime - getCurrentTime();
   boolean isConnectionGood = true;
   if (between > 1000000) {
     isConnectionGood = false;
   }
-  # print("good connection? " + toString(isConnectionGood));
 
   integer duration = t.tradeTime - lastBarTickedTime;
   
-  # print(duration);
   if (duration < resolution * 10 * 1000 * 1000) {
     transactions >> t;
   } else {
     if (sizeof(transactions) == 0) {
       transactions >> t;
     }
-    # print("here");
     bar curBar = generateBar(transactions);
     lastBarTickedTime = t.tradeTime;
 
@@ -333,7 +339,6 @@ event onPubOrderFilled(string exchange, transaction t) {
           currentOrderId++;
           buyMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
           print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
-          # drawChartPointToSeries("Buy", t.tradeTime, t.price);          
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);
         }
@@ -341,13 +346,11 @@ event onPubOrderFilled(string exchange, transaction t) {
     } 
     else {
       drawChartPointToSeries("Downward", barEndTimeStamp, psar);
-      # print("trend - " + trend + ", " + "old trend - " + oldTrend);
       if (oldTrend != "down") {
         if (isConnectionGood == true) {
           currentOrderId++;
           sellMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
           print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
-          # drawChartPointToSeries("Sell", t.tradeTime, t.price);          
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);
         }
