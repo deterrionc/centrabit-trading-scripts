@@ -40,10 +40,11 @@ float   histogram       = 0.0;
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
-integer winCount          = 0;
-integer lossCount         = 0;
+integer winCount        = 0;
+integer lossCount       = 0;
 float   buyTotal        = 0.0;
 float   sellTotal       = 0.0;
+float   profitTotal     = 0.0;
 float   totalWin        = 0.0;
 float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
@@ -143,8 +144,6 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
-
     string tradeNumStr = toString(tradeNumber);
     for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
@@ -152,7 +151,11 @@ void onOwnOrderFilledTest(transaction t) {
     float profit;
     if (t.isAsk == false) {
       tradeSign = "LX";
-      profit = amount - entryAmount - t.fee - entryFee;
+      if (tradeNumber == 1) {
+        profit = amount / 2.0 - entryAmount - t.fee - entryFee;
+      } else {
+        profit = amount - entryAmount - t.fee - entryFee;
+      }
       tradeLog += "\tLX\t";
     } else {
       tradeSign = "SX";
@@ -160,18 +163,20 @@ void onOwnOrderFilledTest(transaction t) {
       tradeLog += "\tSX\t";
     }
 
+    profitTotal += profit;
+
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
     tradeLogList >> tradeLog;
 
     if (tradeSign == "LX") {
       tradeLog = "\tSE\t";
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(profitTotal);
       tradeLogList >> tradeLog;
     }
 
     if (tradeSign == "SX") {
       tradeLog = "\tLE\t";
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(profitTotal);
       tradeLogList >> tradeLog;
     }
 
@@ -190,6 +195,7 @@ void onOwnOrderFilledTest(transaction t) {
     }
 
     profitSeriesID++;
+    printFillLogs(t, toString(profitTotal));
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);
@@ -643,10 +649,10 @@ void backtest() {
   print(" ");
   print("Result : " + resultString);
 
-  print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
+  print("Total profit : " + toString(profitTotal));
   print("*****************************");
 
-  saveResultToEnv(toString(sellTotal - buyTotal - feeTotal), toString(tharpExpectancy));
+  saveResultToEnv(toString(profitTotal), toString(tharpExpectancy));
 }
 
 backtest();
