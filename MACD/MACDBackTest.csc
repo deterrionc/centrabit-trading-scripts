@@ -42,8 +42,6 @@ integer buyCount        = 0;
 integer sellCount       = 0;
 integer winCount        = 0;
 integer lossCount       = 0;
-float   buyTotal        = 0.0;
-float   sellTotal       = 0.0;
 float   profitTotal     = 0.0;
 float   totalWin        = 0.0;
 float   totalLoss       = 0.0;
@@ -130,11 +128,9 @@ void onOwnOrderFilledTest(transaction t) {
   feeTotal += t.fee;
 
   if (t.isAsk == false) {                   # when sell order fillend
-    sellTotal += amount;
     baseCurrencyBalance -= AMOUNT;
     quoteCurrencyBalance += amount;
   } else {                                  # when buy order filled
-    buyTotal += amount;
     baseCurrencyBalance += AMOUNT;
     quoteCurrencyBalance -= amount;
   }
