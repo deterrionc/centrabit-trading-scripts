@@ -26,7 +26,7 @@ float   AMOUNT          = 1.0;                      # The amount of buy or sell 
 string  STARTDATETIME   = "2023-06-14 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
-float   FEE             = 0.01;                     # taker fee in percentage
+float   FEE             = 0.002;                    # taker fee in percentage
 #############################################
 
 # Trading Variables
@@ -40,13 +40,11 @@ float   histogram       = 0.0;
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
-integer winCount          = 0;
-integer lossCount         = 0;
-float   buyTotal        = 0.0;
-float   sellTotal       = 0.0;
+integer winCount        = 0;
+integer lossCount       = 0;
+float   profitTotal     = 0.0;
 float   totalWin        = 0.0;
 float   totalLoss       = 0.0;
-float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 string  tradeLogList[];
@@ -126,14 +124,11 @@ void printFillLogs(transaction t, string totalProfit) {
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
-  feeTotal += t.fee;
 
   if (t.isAsk == false) {                   # when sell order fillend
-    sellTotal += amount;
     baseCurrencyBalance -= AMOUNT;
     quoteCurrencyBalance += amount;
   } else {                                  # when buy order filled
-    buyTotal += amount;
     baseCurrencyBalance += AMOUNT;
     quoteCurrencyBalance -= amount;
   }
@@ -143,8 +138,6 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
-
     string tradeNumStr = toString(tradeNumber);
     for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
@@ -152,7 +145,11 @@ void onOwnOrderFilledTest(transaction t) {
     float profit;
     if (t.isAsk == false) {
       tradeSign = "LX";
-      profit = amount - entryAmount - t.fee - entryFee;
+      if (tradeNumber == 1) {
+        profit = amount / 2.0 - entryAmount - t.fee - entryFee;
+      } else {
+        profit = amount - entryAmount - t.fee - entryFee;
+      }
       tradeLog += "\tLX\t";
     } else {
       tradeSign = "SX";
@@ -160,18 +157,20 @@ void onOwnOrderFilledTest(transaction t) {
       tradeLog += "\tSX\t";
     }
 
+    profitTotal += profit;
+
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
     tradeLogList >> tradeLog;
 
     if (tradeSign == "LX") {
       tradeLog = "\tSE\t";
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(profitTotal);
       tradeLogList >> tradeLog;
     }
 
     if (tradeSign == "SX") {
       tradeLog = "\tLE\t";
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(profitTotal);
       tradeLogList >> tradeLog;
     }
 
@@ -190,6 +189,7 @@ void onOwnOrderFilledTest(transaction t) {
     }
 
     profitSeriesID++;
+    printFillLogs(t, toString(profitTotal));
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);
@@ -605,6 +605,15 @@ void backtest() {
   }
 
   setChartsPairBuffering(false);
+  
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
+
+  print("\n--------------------------------------------------------------------------------------------------------------------------");
+  print(tradeListTitle);
+  print("--------------------------------------------------------------------------------------------------------------------------");
+  for (integer i=0; i<sizeof(tradeLogList); i++) {
+    print(tradeLogList[i]);
+  }
 
   integer totalCount = winCount + lossCount;
   float rewardToRiskRatio = totalWin / totalLoss;
@@ -622,18 +631,11 @@ void backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  
-  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
-
-  print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeListTitle);
-  print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
-    print(tradeLogList[i]);
-  }
-  print(" ");
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("\n--------------------------------------------------------------------------------------------------------------------------");
+  print("Total Win : " + toString(totalWin));
+  print("Total Loss : " + toString(totalLoss));
+  print("Win Count : " + toString(winCount));
+  print("Loss Count : " + toString(lossCount));
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
@@ -643,10 +645,10 @@ void backtest() {
   print(" ");
   print("Result : " + resultString);
 
-  print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
+  print("Total profit : " + toString(profitTotal));
   print("*****************************");
 
-  saveResultToEnv(toString(sellTotal - buyTotal - feeTotal), toString(tharpExpectancy));
+  saveResultToEnv(toString(profitTotal), toString(tharpExpectancy));
 }
 
 backtest();
