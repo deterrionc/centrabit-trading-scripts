@@ -45,7 +45,6 @@ integer lossCount       = 0;
 float   profitTotal     = 0.0;
 float   totalWin        = 0.0;
 float   totalLoss       = 0.0;
-float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 string  tradeLogList[];
@@ -125,7 +124,6 @@ void printFillLogs(transaction t, string totalProfit) {
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
-  feeTotal += t.fee;
 
   if (t.isAsk == false) {                   # when sell order fillend
     baseCurrencyBalance -= AMOUNT;
