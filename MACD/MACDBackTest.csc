@@ -605,6 +605,15 @@ void backtest() {
   }
 
   setChartsPairBuffering(false);
+  
+  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
+
+  print("\n--------------------------------------------------------------------------------------------------------------------------");
+  print(tradeListTitle);
+  print("--------------------------------------------------------------------------------------------------------------------------");
+  for (integer i=0; i<sizeof(tradeLogList); i++) {
+    print(tradeLogList[i]);
+  }
 
   integer totalCount = winCount + lossCount;
   float rewardToRiskRatio = totalWin / totalLoss;
@@ -622,18 +631,11 @@ void backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  
-  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
-
-  print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeListTitle);
-  print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
-    print(tradeLogList[i]);
-  }
-  print(" ");
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("\n--------------------------------------------------------------------------------------------------------------------------");
+  print("Total Win : " + toString(totalWin));
+  print("Total Loss : " + toString(totalLoss));
+  print("Win Count : " + toString(winCount));
+  print("Loss Count : " + toString(lossCount));
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
