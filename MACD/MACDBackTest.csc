@@ -632,10 +632,10 @@ void backtest() {
   }
 
   print("\n--------------------------------------------------------------------------------------------------------------------------");
-  print("Total Win : " + toString(totalWin));
-  print("Total Loss : " + toString(totalLoss));
-  print("Win Count : " + toString(winCount));
-  print("Loss Count : " + toString(lossCount));
+  # print("Total Win : " + toString(totalWin));
+  # print("Total Loss : " + toString(totalLoss));
+  # print("Win Count : " + toString(winCount));
+  # print("Loss Count : " + toString(lossCount));
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
