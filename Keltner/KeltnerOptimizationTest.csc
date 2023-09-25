@@ -14,8 +14,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting     = "Centrabit";
-string  symbolSetting       = "LTC/BTC";
+string  EXCHANGESETTING     = "Centrabit";
+string  SYMBOLSETTING       = "LTC/BTC";
 integer EMALENSTART         = 70;
 integer EMALENEND           = 100;
 integer EMALENSTEP          = 10;
@@ -57,8 +57,8 @@ float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 float   barPricesInEMAPeriod[];
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 float   lastPrice             = 0.0;
 float   lastOwnOrderPrice     = 0.0;
 transaction testTrans[];
@@ -335,18 +335,18 @@ float backtest() {
   integer currentTime = getCurrentTime();
 
   print("Preparing Bars in Period...");
-  bar barsInPeriod[] = getTimeBars(exchangeSetting, symbolSetting, testStartTime, EMALEN, resolution * 60 * 1000 * 1000);
+  bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, EMALEN, resolution * 60 * 1000 * 1000);
   integer barSize = sizeof(barsInPeriod);
   for (integer i = 0; i < barSize; i++) {
     barPricesInEMAPeriod >> barsInPeriod[i].closePrice;
   }
 
   print("Checking order book status..");
-  float minAskOrderPrice = getOrderBookAsk(exchangeSetting, symbolSetting);
-  float maxBidOrderPrice = getOrderBookBid(exchangeSetting, symbolSetting);
+  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
+  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
 
-  order askOrders[] = getOrderBookByRangeAsks(exchangeSetting, symbolSetting, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(exchangeSetting, symbolSetting, 0.0, 1.0);
+  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
+  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
 
 
   minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
@@ -393,8 +393,8 @@ float backtest() {
   integer timecounter = 0;
   delete tradeLogList;
 
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
 
   print("test progressing...");
@@ -510,7 +510,7 @@ float backtest() {
 
   print("");
   
-  string tradeLogListTitle = "Trade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
+  string tradeLogListTitle = "Trade\tTime\t\t" + SYMBOLSETTING + "\tMax" + getBaseCurrencyName(SYMBOLSETTING) + "\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\tAcc\tDrawdown";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeLogListTitle);
@@ -542,7 +542,7 @@ string optimization() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
@@ -591,7 +591,7 @@ string optimization() {
     return;
   }
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
-  testTrans = getPubTrades(exchangeSetting, symbolSetting, testStartTime, testEndTime);
+  testTrans = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
 
   for (integer i = EMALENSTART; i <= EMALENEND; i += EMALENSTEP) {
     for (float j = ATRMULTIPLIERSTART; j <= ATRMULTIPLIEREND; j += ATRMULTIPLIERSTEP ) {

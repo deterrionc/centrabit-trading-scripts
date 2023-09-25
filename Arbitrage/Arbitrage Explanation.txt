@@ -4,9 +4,9 @@ Arbitrage Algorithm Script Documentation
 
   - Trading Platforms: Users are required to specify their preferred trading centers, which can include options like Centrabit, Bitfinex, or Binance.
 
-  - Currency Pair: Users must designate the currency pair they intend to use for the arbitrage by setting the symbolSetting.
+  - Currency Pair: Users must designate the currency pair they intend to use for the arbitrage by setting the SYMBOLSETTING.
 
-  - Trading Volume: Users should determine the trading amount for each transaction. This amount should be in the Base currency. For instance, if the symbolSetting is "LTC/BTC", then the Base currency is LTC.
+  - Trading Volume: Users should determine the trading amount for each transaction. This amount should be in the Base currency. For instance, if the SYMBOLSETTING is "LTC/BTC", then the Base currency is LTC.
 
 2. Operational Procedure:
 

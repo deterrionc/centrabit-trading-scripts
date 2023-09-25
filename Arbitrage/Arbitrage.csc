@@ -20,7 +20,7 @@ import "library.csh";
 # User settings
 string  exchange1       = "Centrabit";
 string  exchange2       = "Bitfinex";
-string  symbolSetting   = "LTC/BTC";
+string  SYMBOLSETTING   = "LTC/BTC";
 string  RESOL           = "1m";                     # Bar resolution
 float   AMOUNT          = 0.1;                      # The amount of buy or sell order at once
 #############################################
@@ -45,7 +45,7 @@ boolean checkEnoughBalance(string exchange, float balance, string asset) {
       return false;
     }
   } else if (asset == "quote") {
-    float price = getPubLastPrice(exchange, symbolSetting);
+    float price = getPubLastPrice(exchange, SYMBOLSETTING);
     if (balance > (2.0 * price * AMOUNT)) {
       return true;
     } else {
@@ -56,7 +56,7 @@ boolean checkEnoughBalance(string exchange, float balance, string asset) {
 
 boolean checkAvailableBalances() {
   print(exchange1);
-  string baseCurrency = getBaseCurrencyName(symbolSetting);
+  string baseCurrency = getBaseCurrencyName(SYMBOLSETTING);
   float baseTotalBalance = getTotalBalance(exchange1, baseCurrency);
   float baseAvailableBalance = getAvailableBalance(exchange1, baseCurrency);
   float baseLockedBalance = getLockedBalance(exchange1, baseCurrency);
@@ -68,7 +68,7 @@ boolean checkAvailableBalances() {
   print("    base locked = " + toString(baseLockedBalance));
   print("\n");
 
-  string quoteCurrency = getQuoteCurrencyName(symbolSetting);
+  string quoteCurrency = getQuoteCurrencyName(SYMBOLSETTING);
   float quoteTotalBalance = getTotalBalance(exchange1, quoteCurrency);
   float quoteAvailableBalance = getAvailableBalance(exchange1, quoteCurrency);
   float quoteLockedBalance = getLockedBalance(exchange1, quoteCurrency);
@@ -81,7 +81,7 @@ boolean checkAvailableBalances() {
   print("\n");
 
   print(exchange2);
-  baseCurrency = getBaseCurrencyName(symbolSetting);
+  baseCurrency = getBaseCurrencyName(SYMBOLSETTING);
   baseTotalBalance = getTotalBalance(exchange2, baseCurrency);
   baseAvailableBalance = getAvailableBalance(exchange2, baseCurrency);
   baseLockedBalance = getLockedBalance(exchange2, baseCurrency);
@@ -93,7 +93,7 @@ boolean checkAvailableBalances() {
   print("    base locked = " + toString(baseLockedBalance));
   print("\n");
 
-  quoteCurrency = getQuoteCurrencyName(symbolSetting);
+  quoteCurrency = getQuoteCurrencyName(SYMBOLSETTING);
   quoteTotalBalance = getTotalBalance(exchange2, quoteCurrency);
   quoteAvailableBalance = getAvailableBalance(exchange2, quoteCurrency);
   quoteLockedBalance = getLockedBalance(exchange2, quoteCurrency);
@@ -109,8 +109,8 @@ boolean checkAvailableBalances() {
 
 void arbitrageSellBuy(string sellExchange, string buyExchange) {
   # First, check the balances
-  string baseCurrency = getBaseCurrencyName(symbolSetting);
-  string quoteCurrency = getQuoteCurrencyName(symbolSetting);
+  string baseCurrency = getBaseCurrencyName(SYMBOLSETTING);
+  string quoteCurrency = getQuoteCurrencyName(SYMBOLSETTING);
   float sellBaseAvailableBalance = getAvailableBalance(sellExchange, baseCurrency);
   float sellQuoteAvailableBalance = getAvailableBalance(sellExchange, quoteCurrency);
   float buyBaseAvailableBalance = getAvailableBalance(buyExchange, baseCurrency);
@@ -141,9 +141,9 @@ void arbitrageSellBuy(string sellExchange, string buyExchange) {
   
   if (canBuySell) {
     currentOrderId++;
-    sellMarket(sellExchange, symbolSetting, AMOUNT, currentOrderId);
+    sellMarket(sellExchange, SYMBOLSETTING, AMOUNT, currentOrderId);
     currentOrderId++;
-    buyMarket(buyExchange, symbolSetting, AMOUNT, currentOrderId);
+    buyMarket(buyExchange, SYMBOLSETTING, AMOUNT, currentOrderId);
     setCurrentChartPosition("0");
     if (sellExchange == exchange1) {
       drawChartPointToSeries("Sell", exchange2LastTranTime, exchange1LastTranPrice);
@@ -158,7 +158,7 @@ void arbitrageSellBuy(string sellExchange, string buyExchange) {
 
 event onPubOrderFilled(string exchange, transaction t) {
   if (exchange == exchange1) {
-    float tempPrice = getPubLastPrice(exchange, symbolSetting);
+    float tempPrice = getPubLastPrice(exchange, SYMBOLSETTING);
     exchange1LastTranPrice = t.price;
     exchange1LastTranTime = t.tradeTime;
     drawChartPriceLine("1", exchange1, t.tradeTime, t.price);
@@ -185,8 +185,8 @@ void main() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction exchange1Trans[] = getPubTrades(exchange1, symbolSetting, conTestStartTime, conTestEndTime);
-  transaction exchange2Trans[] = getPubTrades(exchange2, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction exchange1Trans[] = getPubTrades(exchange1, SYMBOLSETTING, conTestStartTime, conTestEndTime);
+  transaction exchange2Trans[] = getPubTrades(exchange2, SYMBOLSETTING, conTestStartTime, conTestEndTime);
 
   if (sizeof(exchange1Trans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
@@ -198,7 +198,7 @@ void main() {
   integer resolution = interpretResol(RESOL);
 
   setCurrentChartsExchange(exchange1);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setCurrentSeriesName("Sell");
   configureScatter(true, "#FF0000", "#FF0000", 7.0);

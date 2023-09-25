@@ -18,8 +18,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 integer EMALEN          = 20;                            # EMA period length
 float   ATRMULTIPLIER   = 2.0;                           # ATR multiplier
 string  RESOL           = "1m";                          # Bar resolution
@@ -113,7 +113,7 @@ void updateKeltner() {
 
 event onPubOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
 
@@ -151,7 +151,7 @@ event onPubOrderFilled(string exchange, transaction t) {
     if (position == "long") {     # Bought -> Sell
       print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
       buyStopped = true;
-      sellMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
       prevPosition = "long";
       sellCount++;
@@ -161,7 +161,7 @@ event onPubOrderFilled(string exchange, transaction t) {
     if (position == "short") {        # Sold -> Buy
       print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
       sellStopped = true;
-      buyMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
       prevPosition = "short";
       buyCount++;
@@ -192,7 +192,7 @@ event onPubOrderFilled(string exchange, transaction t) {
         currentOrderId++;
         print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
 
-        sellMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+        sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
 
         if (position == "flat") {
           if (prevPosition == "") {
@@ -231,7 +231,7 @@ event onPubOrderFilled(string exchange, transaction t) {
         currentOrderId++;
         print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
     
-        buyMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+        buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
 
         if (position == "flat") {
           if (prevPosition == "") {
@@ -253,7 +253,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
 event onOwnOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
   
@@ -339,13 +339,13 @@ void main() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
   }
 
-  bar barsInPeriod[] = getTimeBars(exchangeSetting, symbolSetting, 0, EMALEN, resolution * 60 * 1000 * 1000);
+  bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, EMALEN, resolution * 60 * 1000 * 1000);
   integer barSize = sizeof(barsInPeriod);
   if (barSize < EMALEN) {
     print("Initializing failed. " + toString(barSize) + " of bars catched. Please restart the script.");
@@ -357,8 +357,8 @@ void main() {
   for (integer i = 0; i < barSize; i++) {
     barPriceInEMAPeriod >> barsInPeriod[i].closePrice;
   }
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setChartTime(getCurrentTime() +  30 * 24 * 60*1000000);
 
@@ -390,13 +390,13 @@ void main() {
   print("Initial keltnerUpperBand :" + toString(upperBand));
   print("Initial keltnerLowerBand :" + toString(lowerBand));
 
-  baseCurrencyBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-  quoteCurrencyBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, "Trade,Time," + symbolSetting + ",Max" + getBaseCurrencyName(symbolSetting) + ",Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,Drawdown,\n");
+  fwrite(logFile, "Trade,Time," + SYMBOLSETTING + ",Max" + getBaseCurrencyName(SYMBOLSETTING) + ",Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,Drawdown,\n");
   fclose(logFile);
 
   print("--------------   Running   -------------------");

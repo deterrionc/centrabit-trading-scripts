@@ -18,8 +18,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 integer SMALEN          = 20;                       # SMA period length
 float   STDDEVSETTING   = 1.0;                      # Standard Deviation
 string  RESOL           = "1m";                     # Bar resolution
@@ -28,11 +28,11 @@ float   STOPLOSSAT      = 0.01;                     # Stop loss point at percent
 boolean USETRAILINGSTOP = true;
 
 void getEnvVariables() {
-  if (strlength(getEnv("exchangeSetting")) != 0) {
-    exchangeSetting = getEnv("exchangeSetting");
+  if (strlength(getEnv("EXCHANGESETTING")) != 0) {
+    EXCHANGESETTING = getEnv("EXCHANGESETTING");
   }
-  if (strlength(getEnv("symbolSetting")) != 0) {
-    symbolSetting = getEnv("symbolSetting");
+  if (strlength(getEnv("SYMBOLSETTING")) != 0) {
+    SYMBOLSETTING = getEnv("SYMBOLSETTING");
   }
   if (strlength(getEnv("SMALEN")) != 0) {
     SMALEN = toInteger(getEnv("SMALEN"));
@@ -130,7 +130,7 @@ boolean trailingStopTick(float price) {
 
 event onPubOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
 
@@ -179,7 +179,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
       setVariable("inProcess", "1");
 
-      sellMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
 
       if (position == "flat") {
         if (prevPosition == "") {
@@ -224,7 +224,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
       setVariable("inProcess", "1");
 
-      buyMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
 
       if (position == "flat") {
         if (prevPosition == "") {
@@ -245,7 +245,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
 event onOwnOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
   
@@ -367,7 +367,7 @@ void main() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
@@ -375,12 +375,12 @@ void main() {
 
   integer resolution = interpretResol(RESOL);
 
-  bar barsInPeriod[] = getTimeBars(exchangeSetting, symbolSetting, 0, SMALEN, resolution * 60 * 1000 * 1000);
+  bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, SMALEN, resolution * 60 * 1000 * 1000);
   for (integer i=0; i<sizeof(barsInPeriod); i++) {
     barPriceInSMAPeriod >> barsInPeriod[i].closePrice;
   }
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setChartTime(getCurrentTime() +  30 * 24 * 60 * 1000000);
 
@@ -418,11 +418,11 @@ void main() {
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, "Trade,Time," + symbolSetting + ",Max" + getBaseCurrencyName(symbolSetting) + ",Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,Drawdown,\n");
+  fwrite(logFile, "Trade,Time," + SYMBOLSETTING + ",Max" + getBaseCurrencyName(SYMBOLSETTING) + ",Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,Drawdown,\n");
   fclose(logFile);
 
-  baseCurrencyBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-  quoteCurrencyBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
   print("--------------   Running   -------------------");
 

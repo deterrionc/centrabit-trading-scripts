@@ -16,8 +16,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 integer SMALEN          = 70;                               # SMA period length
 float   STDDEVSETTING   = 3.0;                              # Standard Deviation
 string  RESOL           = "10m";                            # Bar resolution
@@ -76,9 +76,9 @@ file logFile;
 
 void initCommonParameters() {
   if (toBoolean(getVariable("EXCHANGE"))) 
-    exchangeSetting = getVariable("EXCHANGE");
+    EXCHANGESETTING = getVariable("EXCHANGE");
   if (toBoolean(getVariable("CURRNCYPAIR"))) 
-    symbolSetting = getVariable("CURRNCYPAIR");
+    SYMBOLSETTING = getVariable("CURRNCYPAIR");
   if (toBoolean(getVariable("RESOLUTION"))) 
     RESOL = getVariable("RESOLUTION");
   if (toBoolean(getVariable("AMOUNT"))) 
@@ -461,12 +461,12 @@ void onTimeOutTest() {
 void backtest() {
   initCommonParameters();
 
-  print("^^^^^^^^^^^^^^^^^ BollingerBands Backtest ( EXCHANGE : " + exchangeSetting + ", CURRENCY PAIR : " + symbolSetting + ") ^^^^^^^^^^^^^^^^^");
+  print("^^^^^^^^^^^^^^^^^ BollingerBands Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^^^^^^^^^");
   print("");
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
@@ -491,12 +491,12 @@ void backtest() {
     return;
   }
 
-  baseCurrencyBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-  quoteCurrencyBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
 
-  transaction testTrans[] = getPubTrades(exchangeSetting, symbolSetting, testStartTime, testEndTime);
+  transaction testTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
   if (sizeof(testTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
@@ -506,13 +506,13 @@ void backtest() {
   integer resolution = interpretResol(RESOL);
 
   print("Preparing Bars in Period...");
-  bar barsInPeriod[] = getTimeBars(exchangeSetting, symbolSetting, testStartTime, SMALEN, resolution * 60 * 1000 * 1000);
+  bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SMALEN, resolution * 60 * 1000 * 1000);
   for (integer i=0; i<sizeof(barsInPeriod); i++) {
     barPricesInSMAPeriod >> barsInPeriod[i].closePrice;
   }
 
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setChartBarCount(10);
   setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
@@ -531,11 +531,11 @@ void backtest() {
   setCurrentSeriesName("Lower");
   configureLine(true, "#fd4700", 2.0);  
 
-  float minAskOrderPrice = getOrderBookAsk(exchangeSetting, symbolSetting);
-  float maxBidOrderPrice = getOrderBookBid(exchangeSetting, symbolSetting);
+  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
+  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
 
-  order askOrders[] = getOrderBookByRangeAsks(exchangeSetting, symbolSetting, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(exchangeSetting, symbolSetting, 0.0, 1.0);
+  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
+  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
 
   minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
   maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;
@@ -654,7 +654,7 @@ void backtest() {
   print("");
   print(" ");
 
-  string tradeListTitle = "\tTrade\tTime\t\t" + symbolSetting + "\t\t" + getBaseCurrencyName(symbolSetting) + "(per)\tProf" + getQuoteCurrencyName(symbolSetting) + "\t\tAcc";
+  string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
@@ -663,7 +663,7 @@ void backtest() {
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, ",Trade,Time," + symbolSetting + ",," + getBaseCurrencyName(symbolSetting) + "(per),Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,\n");
+  fwrite(logFile, ",Trade,Time," + SYMBOLSETTING + ",," + getBaseCurrencyName(SYMBOLSETTING) + "(per),Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,\n");
 
   string logline;
   for (integer i=0; i<sizeof(tradeLogList); i++) {

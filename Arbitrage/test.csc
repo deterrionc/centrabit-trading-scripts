@@ -11,8 +11,8 @@ import Processes;
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 integer SMALEN          = 20;                       # SMA period length
 float   STDDEVSETTING   = 1.0;                      # Standard Deviation
 string  RESOL           = "1m";                     # Bar resolution
@@ -20,8 +20,8 @@ float   AMOUNT          = 0.1;                      # The amount of buy or sell 
 float   STOPLOSSAT      = 0.01;                     # Stop loss point at percentage
 boolean USETRAILINGSTOP = true;
 
-print(exchangeSetting);
-print(symbolSetting);
+print(EXCHANGESETTING);
+print(SYMBOLSETTING);
 print(SMALEN);
 print(STDDEVSETTING);
 print(RESOL);
@@ -29,11 +29,11 @@ print(AMOUNT);
 print(STOPLOSSAT);
 print(USETRAILINGSTOP);
 
-if (strlength(getEnv("exchangeSetting")) != 0) {
-  exchangeSetting = getEnv("exchangeSetting");
+if (strlength(getEnv("EXCHANGESETTING")) != 0) {
+  EXCHANGESETTING = getEnv("EXCHANGESETTING");
 }
-if (strlength(getEnv("symbolSetting")) != 0) {
-  symbolSetting = getEnv("symbolSetting");
+if (strlength(getEnv("SYMBOLSETTING")) != 0) {
+  SYMBOLSETTING = getEnv("SYMBOLSETTING");
 }
 if (strlength(getEnv("SMALEN")) != 0) {
   SMALEN = toInteger(getEnv("SMALEN"));
@@ -55,8 +55,8 @@ if (strlength(getEnv("USETRAILINGSTOP")) != 0) {
 }
 
 print("\n");
-print(exchangeSetting);
-print(symbolSetting);
+print(EXCHANGESETTING);
+print(SYMBOLSETTING);
 print(SMALEN);
 print(STDDEVSETTING);
 print(RESOL);

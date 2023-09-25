@@ -20,7 +20,7 @@ import "library.csh";
 # User settings
 string  exchange1       = "Centrabit";
 string  exchange2       = "Bitfinex";
-string  symbolSetting   = "LTC/BTC";
+string  SYMBOLSETTING   = "LTC/BTC";
 string  RESOL           = "1m";                     # Bar resolution
 float   AMOUNT          = 0.1;                      # The amount of buy or sell order at once
 #############################################
@@ -46,8 +46,8 @@ void drawChartPriceLine(string chartPosition, string chartName, integer time, fl
 }
 
 void placeLimitOrders() {
-    float priceC = getPubLastPrice(exchange1, symbolSetting);
-    float priceB = getPubLastPrice(exchange2, symbolSetting);
+    float priceC = getPubLastPrice(exchange1, SYMBOLSETTING);
+    float priceB = getPubLastPrice(exchange2, SYMBOLSETTING);
     float priceDifference = fabs(priceC - priceB);
     feeDifference = priceC * AMOUNT / 500.0;
 
@@ -61,11 +61,11 @@ void placeLimitOrders() {
     print("Order ID: " + toString(order2Marker) + " - " + exchange2 + ": Buy Order Placed (" + timeToString(getCurrentTime(), "yyyy-MM-dd hh:mm:ss") + ") Quantity: " + toString(AMOUNT) + " Price: " + toString(priceB) + "\n");
 
     if(priceC > priceB) {
-      sell(exchange1, symbolSetting, AMOUNT, priceC, order1Marker);  # Increment marker after use
-      buy(exchange2, symbolSetting, AMOUNT, priceB, order2Marker);
+      sell(exchange1, SYMBOLSETTING, AMOUNT, priceC, order1Marker);  # Increment marker after use
+      buy(exchange2, SYMBOLSETTING, AMOUNT, priceB, order2Marker);
     } else {
-      sell(exchange2, symbolSetting, AMOUNT, priceB, order2Marker);
-      buy(exchange1, symbolSetting, AMOUNT, priceC, order1Marker);
+      sell(exchange2, SYMBOLSETTING, AMOUNT, priceB, order2Marker);
+      buy(exchange1, SYMBOLSETTING, AMOUNT, priceC, order1Marker);
     }
 
     isOrderActive = true;
@@ -79,32 +79,32 @@ void handleOrderFill(string exchange, transaction t) {
     # If a sell order is filled on exchange1, then a buyMarket order should be placed on exchange2
     if (exchange == exchange1 && t.isAsk == false && t.marker == order1Marker) {
         print("Order ID: " + toString(order1Marker) + " - " + exchange1 + ": Sell Limit Order Executed (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") Quantity: " + toString(t.amount) + " Price: " + toString(t.price) + "\n\t" + "Corresponding Buy Limit Order Cancelled; Transitioned to Market Order.");
-        orderCancel(exchange2, symbolSetting, order2Marker);
-        buyMarket(exchange2, symbolSetting, marketAmount, 0);
+        orderCancel(exchange2, SYMBOLSETTING, order2Marker);
+        buyMarket(exchange2, SYMBOLSETTING, marketAmount, 0);
         removeTimer(orderTimeout * 1000);
     }
 
     # If a buy order is filled on exchange1, then a sellMarket order should be placed on exchange2
     if (exchange == exchange1 && t.isAsk == true && t.marker == order1Marker) {
         print("Order ID: " + toString(order1Marker) + " - " + exchange1 + ": Buy Limit Order Executed (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") Quantity: " + toString(t.amount) + " Price: " + toString(t.price) + "\n\t" + "Corresponding Sell Limit Order Cancelled; Transitioned to Market Order.");
-        orderCancel(exchange2, symbolSetting, order2Marker);
-        sellMarket(exchange2, symbolSetting, marketAmount, 0);
+        orderCancel(exchange2, SYMBOLSETTING, order2Marker);
+        sellMarket(exchange2, SYMBOLSETTING, marketAmount, 0);
         removeTimer(orderTimeout * 1000);
     }
 
     # If a sell order is filled on exchange2, then a buyMarket order should be placed on exchange1
     if (exchange == exchange2 && t.isAsk == false && t.marker == order2Marker) {
         print("Order ID: " + toString(order2Marker) + " - " + exchange2 + ": Sell Limit Order Executed (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") Quantity: " + toString(t.amount) + " Price: " + toString(t.price) + "\n\t" + "Corresponding Buy Limit Order Cancelled; Transitioned to Market Order.");
-        orderCancel(exchange1, symbolSetting, order1Marker);
-        buyMarket(exchange1, symbolSetting, marketAmount, 0);
+        orderCancel(exchange1, SYMBOLSETTING, order1Marker);
+        buyMarket(exchange1, SYMBOLSETTING, marketAmount, 0);
         removeTimer(orderTimeout * 1000);
     }
 
     # If a buy order is filled on exchange2, then a sellMarket order should be placed on exchange1
     if (exchange == exchange2 && t.isAsk == true && t.marker == order2Marker) {
         print("Order ID: " + toString(order2Marker) + " - " + exchange2 + ": Buy Limit Order Executed (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") Quantity: " + toString(t.amount) + " Price: " + toString(t.price) + "\n\t" + "Corresponding Sell Limit Order Cancelled; Transitioned to Market Order.");
-        orderCancel(exchange1, symbolSetting, order1Marker);
-        sellMarket(exchange1, symbolSetting, marketAmount, 0);
+        orderCancel(exchange1, SYMBOLSETTING, order1Marker);
+        sellMarket(exchange1, SYMBOLSETTING, marketAmount, 0);
         removeTimer(orderTimeout * 1000);
     }
 }
@@ -131,8 +131,8 @@ event onOwnOrderFilled(string exchange, transaction t) {
 event onTimedOut(integer interval) {
     # If the timer is because of orderTimeout, then cancel any remaining limit orders after the timeout
     if (isOrderActive) {
-        orderCancel(exchange1, symbolSetting, order1Marker);
-        orderCancel(exchange2, symbolSetting, order2Marker);
+        orderCancel(exchange1, SYMBOLSETTING, order1Marker);
+        orderCancel(exchange2, SYMBOLSETTING, order2Marker);
         isOrderActive = false;
         removeTimer(orderTimeout * 1000);
     } else {
@@ -148,7 +148,7 @@ boolean checkEnoughBalance(string exchange, float balance, string asset) {
       return false;
     }
   } else if (asset == "quote") {
-    float price = getPubLastPrice(exchange, symbolSetting);
+    float price = getPubLastPrice(exchange, SYMBOLSETTING);
     if (balance > (2.0 * price * AMOUNT)) {
       return true;
     } else {
@@ -159,7 +159,7 @@ boolean checkEnoughBalance(string exchange, float balance, string asset) {
 
 boolean checkAvailableBalances() {
   print(exchange1);
-  string baseCurrency = getBaseCurrencyName(symbolSetting);
+  string baseCurrency = getBaseCurrencyName(SYMBOLSETTING);
   float baseTotalBalance = getTotalBalance(exchange1, baseCurrency);
   float baseAvailableBalance = getAvailableBalance(exchange1, baseCurrency);
   float baseLockedBalance = getLockedBalance(exchange1, baseCurrency);
@@ -171,7 +171,7 @@ boolean checkAvailableBalances() {
   print("    base locked = " + toString(baseLockedBalance));
   print("\n");
 
-  string quoteCurrency = getQuoteCurrencyName(symbolSetting);
+  string quoteCurrency = getQuoteCurrencyName(SYMBOLSETTING);
   float quoteTotalBalance = getTotalBalance(exchange1, quoteCurrency);
   float quoteAvailableBalance = getAvailableBalance(exchange1, quoteCurrency);
   float quoteLockedBalance = getLockedBalance(exchange1, quoteCurrency);
@@ -184,7 +184,7 @@ boolean checkAvailableBalances() {
   print("\n");
 
   print(exchange2);
-  baseCurrency = getBaseCurrencyName(symbolSetting);
+  baseCurrency = getBaseCurrencyName(SYMBOLSETTING);
   baseTotalBalance = getTotalBalance(exchange2, baseCurrency);
   baseAvailableBalance = getAvailableBalance(exchange2, baseCurrency);
   baseLockedBalance = getLockedBalance(exchange2, baseCurrency);
@@ -196,7 +196,7 @@ boolean checkAvailableBalances() {
   print("    base locked = " + toString(baseLockedBalance));
   print("\n");
 
-  quoteCurrency = getQuoteCurrencyName(symbolSetting);
+  quoteCurrency = getQuoteCurrencyName(SYMBOLSETTING);
   quoteTotalBalance = getTotalBalance(exchange2, quoteCurrency);
   quoteAvailableBalance = getAvailableBalance(exchange2, quoteCurrency);
   quoteLockedBalance = getLockedBalance(exchange2, quoteCurrency);
@@ -226,8 +226,8 @@ void main() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction exchange1Trans[] = getPubTrades(exchange1, symbolSetting, conTestStartTime, conTestEndTime);
-  transaction exchange2Trans[] = getPubTrades(exchange2, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction exchange1Trans[] = getPubTrades(exchange1, SYMBOLSETTING, conTestStartTime, conTestEndTime);
+  transaction exchange2Trans[] = getPubTrades(exchange2, SYMBOLSETTING, conTestStartTime, conTestEndTime);
 
   if (sizeof(exchange1Trans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
@@ -239,7 +239,7 @@ void main() {
   integer resolution = interpretResol(RESOL);
 
   setCurrentChartsExchange(exchange1);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setCurrentSeriesName("Sell");
   configureScatter(true, "#FF0000", "#FF0000", 7.0);

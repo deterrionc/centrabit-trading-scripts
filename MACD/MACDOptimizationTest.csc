@@ -16,8 +16,8 @@ import "library.csh";
 #############################################
 # User settings
 
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 
 integer FASTPERIODSTART = 12;
 integer FASTPERIODEND = 12;
@@ -66,8 +66,8 @@ float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 # Additional needs in backtest mode
 float   minFillOrderPercentage = 0.0;
@@ -84,8 +84,8 @@ transaction testTrans[];
 boolean drawable = false;
 
 # Starting MACD algo
-setCurrentChartsExchange(exchangeSetting);
-setCurrentChartsSymbol(symbolSetting);
+setCurrentChartsExchange(EXCHANGESETTING);
+setCurrentChartsSymbol(SYMBOLSETTING);
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
@@ -236,13 +236,13 @@ float backtest() {
   integer currentTime = getCurrentTime();
 
 
-  bar barData[] = getTimeBars(exchangeSetting, symbolSetting, testStartTime, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
+  bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
 
-  float minAskOrderPrice = getOrderBookAsk(exchangeSetting, symbolSetting);
-  float maxBidOrderPrice = getOrderBookBid(exchangeSetting, symbolSetting);
+  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
+  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
 
-  order askOrders[] = getOrderBookByRangeAsks(exchangeSetting, symbolSetting, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(exchangeSetting, symbolSetting, 0.0, 1.0);
+  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
+  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
 
 
   minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
@@ -388,7 +388,7 @@ float backtest() {
 
   print("");
   
-  string tradeLogListTitle = "Trade\tTime\t\t" + symbolSetting + "\tMax" + getBaseCurrencyName(symbolSetting) + "\tProf" + getQuoteCurrencyName(symbolSetting) + "\tAcc\tDrawdown";
+  string tradeLogListTitle = "Trade\tTime\t\t" + SYMBOLSETTING + "\tMax" + getBaseCurrencyName(SYMBOLSETTING) + "\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\tAcc\tDrawdown";
 
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeLogListTitle);
@@ -417,7 +417,7 @@ string optimization() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
@@ -471,7 +471,7 @@ string optimization() {
   }
 
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
-  testTrans = getPubTrades(exchangeSetting, symbolSetting, testStartTime, testEndTime);
+  testTrans = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
 
   clearCharts();
   setChartBarCount(10);
