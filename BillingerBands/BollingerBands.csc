@@ -27,30 +27,34 @@ float   AMOUNT          = 0.1;                      # The amount of buy or sell 
 float   STOPLOSSAT      = 0.01;                     # Stop loss point at percentage
 boolean USETRAILINGSTOP = true;
 
-if (strlength(getEnv("exchangeSetting")) != 0) {
-  exchangeSetting = getEnv("exchangeSetting");
+void getEnvVariables() {
+  if (strlength(getEnv("exchangeSetting")) != 0) {
+    exchangeSetting = getEnv("exchangeSetting");
+  }
+  if (strlength(getEnv("symbolSetting")) != 0) {
+    symbolSetting = getEnv("symbolSetting");
+  }
+  if (strlength(getEnv("SMALEN")) != 0) {
+    SMALEN = toInteger(getEnv("SMALEN"));
+  }
+  if (strlength(getEnv("STDDEVSETTING")) != 0) {
+    STDDEVSETTING = toFloat(getEnv("STDDEVSETTING"));
+  }
+  if (strlength(getEnv("RESOL")) != 0) {
+    RESOL = getEnv("RESOL");
+  }
+  if (strlength(getEnv("AMOUNT")) != 0) {
+    AMOUNT = toFloat(getEnv("AMOUNT"));
+  }
+  if (strlength(getEnv("STOPLOSSAT")) != 0) {
+    STOPLOSSAT = toFloat(getEnv("STOPLOSSAT"));
+  }
+  if (strlength(getEnv("USETRAILINGSTOP")) != 0) {
+    USETRAILINGSTOP = toBoolean(getEnv("USETRAILINGSTOP"));
+  }
 }
-if (strlength(getEnv("symbolSetting")) != 0) {
-  symbolSetting = getEnv("symbolSetting");
-}
-if (strlength(getEnv("SMALEN")) != 0) {
-  SMALEN = toInteger(getEnv("SMALEN"));
-}
-if (strlength(getEnv("STDDEVSETTING")) != 0) {
-  STDDEVSETTING = toFloat(getEnv("STDDEVSETTING"));
-}
-if (strlength(getEnv("RESOL")) != 0) {
-  RESOL = getEnv("RESOL");
-}
-if (strlength(getEnv("AMOUNT")) != 0) {
-  AMOUNT = toFloat(getEnv("AMOUNT"));
-}
-if (strlength(getEnv("STOPLOSSAT")) != 0) {
-  STOPLOSSAT = toFloat(getEnv("STOPLOSSAT"));
-}
-if (strlength(getEnv("USETRAILINGSTOP")) != 0) {
-  USETRAILINGSTOP = toBoolean(getEnv("USETRAILINGSTOP"));
-}
+
+getEnvVariables();
 
 #############################################
 
