@@ -110,18 +110,6 @@ void saveResultToEnv(string accProfit, string expectancy) {
   setVariable("EXPECTANCY", expectancy);  
 }
 
-void printOrderLogs(integer ID, string signal1, integer time, float price, float amount, string extra) {
-  print(toString(ID) + " " + signal1 + "\t[" + timeToString(time, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(price) + "  Amount: " + toString(amount) + extra);
-}
-
-void printFillLogs(transaction t, string totalProfit) {
-  if (totalProfit == "") {
-    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee));
-  } else {
-    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee) + ",  Total profit: " + totalProfit);
-  }
-}
-
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
 
