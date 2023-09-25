@@ -1,4 +1,4 @@
-# Bollinger Bands trading strategy 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# Bollinger Bands trading strategy 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # Script Name
 script BollingerBands;
@@ -167,8 +167,13 @@ event onPubOrderFilled(string exchange, transaction t) {
 
     if (sellSignal) {
       currentOrderId++;
-      # print(toString(currentOrderId) + " Sell (" + timeToString(t.tradeTime, "hh:mm:ss") + toString(") ") + toString(t.price));
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      #print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+
+      if (currentOrderId == 1) {
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
+      } else {
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
+      }
 
       currentTran = t;
       upperStopLimit = getUpperLimit(t.price);
@@ -212,9 +217,14 @@ event onPubOrderFilled(string exchange, transaction t) {
 
     if (buySignal) {
       currentOrderId++;
-      # print(toString(currentOrderId) + " Buy  (" + timeToString(t.tradeTime, "hh:mm:ss") + ") " + toString(t.price));
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+      # print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
   
+      if (currentOrderId == 1) {
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
+      } else {
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
+      }
+
       currentTran = t;
       lowerStopLimit = getLowerLimit(t.price);
       
@@ -268,8 +278,9 @@ event onOwnOrderFilled(string exchange, transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    # print(toString(t.marker) + " fill (" + timeToString(t.tradeTime, "hh:mm:ss") + ") " + toString(t.price));
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    # print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
+
     string tradeNumStr = toString(tradeNumber);
 
     for (integer i = 0; i < strlength(tradeNumStr); i++) {
@@ -333,9 +344,9 @@ event onOwnOrderFilled(string exchange, transaction t) {
     drawChartPoint(entryTran.tradeTime, entryTran.price);
     drawChartPoint(currentTran.tradeTime, currentTran.price);
   } else {
-    # print(toString(t.marker) + " fill (" + timeToString(t.tradeTime, "hh:mm:ss") + ") " + toString(t.price));
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
-    
+    # print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
+
     tradeLog += toString(tradeNumber);
     
     if (t.isAsk == false) {
