@@ -91,10 +91,10 @@ float   lowerStopLimit        = 0.0;
 
 transaction currentTran;
 transaction entryTran;
-integer profitSeriesID = 0;
-string profitSeriesColor = "green";
-string tradeLogList[];
-
+integer profitSeriesID        = 0;
+string  profitSeriesColor     = "green";
+string  tradeSign             = "";
+string  tradeLogList[];
 file logFile;
 
 float getUpperLimit(float price) {
@@ -103,6 +103,14 @@ float getUpperLimit(float price) {
 
 float getLowerLimit(float price) {
   return price * (1.0 - STOPLOSSAT);
+}
+
+void fileLog(string tradeLog) {
+  logFile = fopen(logFilePath, "a");
+  string logline = strreplace(tradeLog, "\t", ",");
+  logline += "\n";
+  fwrite(logFile, logline);
+  fclose(logFile);
 }
 
 boolean trailingStopTick(float price) {
@@ -167,12 +175,13 @@ event onPubOrderFilled(string exchange, transaction t) {
 
     if (sellSignal) {
       currentOrderId++;
-      #print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
 
       if (currentOrderId == 1) {
         printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
+        sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT / 2.0, currentOrderId);
       } else {
         printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
+        sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       }
 
       currentTran = t;
@@ -183,8 +192,6 @@ event onPubOrderFilled(string exchange, transaction t) {
       }
 
       setVariable("inProcess", "1");
-
-      sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
 
       if (position == "flat") {
         if (prevPosition == "") {
@@ -217,12 +224,13 @@ event onPubOrderFilled(string exchange, transaction t) {
 
     if (buySignal) {
       currentOrderId++;
-      # print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
-  
+
       if (currentOrderId == 1) {
         printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
+        buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT / 2.0, currentOrderId);
       } else {
         printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
+        buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       }
 
       currentTran = t;
@@ -233,8 +241,6 @@ event onPubOrderFilled(string exchange, transaction t) {
       }
 
       setVariable("inProcess", "1");
-
-      buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
 
       if (position == "flat") {
         if (prevPosition == "") {
@@ -278,7 +284,6 @@ event onOwnOrderFilled(string exchange, transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    # print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
     printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
 
     string tradeNumStr = toString(tradeNumber);
@@ -290,17 +295,31 @@ event onOwnOrderFilled(string exchange, transaction t) {
     float profit;
 
     if (t.isAsk == false) {
+      tradeSign = "LX";
       profit = amount - entryAmount - t.fee - entryFee;
       tradeLog += "\tLX  ";
     } else {
+      tradeSign = "SX";
       profit = entryAmount - amount - t.fee - entryFee;
       tradeLog += "\tSX  ";
     }
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(profit) + "\t" + toString(sellTotal - buyTotal - feeTotal);
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+    fileLog(tradeLog);
 
-    string tradeResult;
-    if (profit >= 0.0 ) {
+    if (tradeSign == "LX") {
+      tradeLog = "\tSE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      fileLog(tradeLog);
+    }
+
+    if (tradeSign == "SX") {
+      tradeLog = "\tLE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      fileLog(tradeLog);
+    }
+
+    if (profit >= 0.0) {
       totalWin += profit;
       winCount++;
       if (profitSeriesColor == "red") {
@@ -313,7 +332,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
         profitSeriesColor = "red";
       }
     }
-    tradeLogList >> tradeLog;
+    fileLog(tradeLog);
 
     profitSeriesID++;
 
@@ -343,24 +362,67 @@ event onOwnOrderFilled(string exchange, transaction t) {
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);
     drawChartPoint(currentTran.tradeTime, currentTran.price);
+    entryTran = currentTran;
   } else {
-    # print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
     printFillLogs(t, "");
 
+    if (tradeSign == "LX") {
+      tradeLog = "\tSX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      fileLog(tradeLog);
+    }
+    if (tradeSign == "SX") {
+      tradeLog = "\tLX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      fileLog(tradeLog);
+    }
+
+    tradeLog = "   ";  
     tradeLog += toString(tradeNumber);
     
     if (t.isAsk == false) {
-      tradeLog += "\tSE  ";
+      tradeSign = "SE";
+      tradeLog += "\tSE\t";
     } else {
-      tradeLog += "\tLE  ";
+      tradeSign = "LE";
+      tradeLog += "\tLE\t";
     }
 
     entryAmount = amount;
     entryFee = t.fee;
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
-    tradeLogList >> tradeLog;
+    if (tradeSign == "SE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "green";
+      } else {
+        profitSeriesColor = "red";
+      }
+    }
 
+    if (tradeSign == "LE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "red";
+      } else {
+        profitSeriesColor = "green";
+      }
+    }
+
+    if (tradeNumber == 1) {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      fileLog(tradeLog);
+    } else {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      fileLog(tradeLog);
+    }
+
+    if (tradeNumber > 1) {
+      profitSeriesID++;
+      setCurrentSeriesName("Direction" + toString(profitSeriesID));
+      configureLine(false, profitSeriesColor, 2.0);
+      drawChartPoint(entryTran.tradeTime, entryTran.price);
+      drawChartPoint(currentTran.tradeTime, currentTran.price);
+    }
+    
     entryTran = currentTran;
   }
 }
@@ -429,7 +491,7 @@ void main() {
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, "Trade,Time," + SYMBOLSETTING + ",Max" + getBaseCurrencyName(SYMBOLSETTING) + ",Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,Drawdown,\n");
+  fwrite(logFile, ",Trade,Time," + SYMBOLSETTING + ",," + getBaseCurrencyName(SYMBOLSETTING) + "(per),Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,\n");
   fclose(logFile);
 
   baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
