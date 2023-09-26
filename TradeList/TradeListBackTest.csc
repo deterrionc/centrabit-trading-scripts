@@ -11,8 +11,8 @@ import "library.csh";
 #############################################
 # User settings
 
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 
 float txAmount[];                               # orders
 float txPrice[];
@@ -28,8 +28,8 @@ txAmount >> -5.0;   txPrice >> 0.4;              # flat
 
 #############################################
 
-float initBaseBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-float initQuoteBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+float initBaseBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+float initQuoteBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 float totalBaseTraded = 0.0;  # 0.0 means flat, higher than 0.0 means long, lower than 0.0 means short
 float tradeBuyQuoteTotal = 0.0;
@@ -50,7 +50,7 @@ integer testEndTime = stringToTime(ENDDATETIME, "yyyy-MM-dd hh:mm:ss");
 integer testTimeLength = testEndTime - testStartTime;
 
 print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
-transaction tradeData[] = getPubTrades(exchangeSetting, symbolSetting, testStartTime, testEndTime);  # only timestamps and prices used
+transaction tradeData[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);  # only timestamps and prices used
 integer stepLength = 200;
 
 void makeOrder(transaction t, float orderAmount, float price, boolean isCloseOrder) {
@@ -116,11 +116,11 @@ void closeTrade(integer timestamp, float orderAmount, float price) {
 void main() {
   string tradeLogListTitle = "Trade\tTime";
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), SYMBOLSETTING);
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(SYMBOLSETTING));
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(SYMBOLSETTING));
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
 
   print("--------------------------------------------------------------------------------------------------------------------------");

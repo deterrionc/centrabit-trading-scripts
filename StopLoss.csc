@@ -18,8 +18,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 float   AMOUNT          = 0.1;                              # The amount of buy or sell order at once
 float   STOPLOSSAT      = 0.01;                             # Stop loss point at percentage
 string  logFilePath     = "C:/bb_log_stop_point_list_";     # Please make sure this path any drive except C:
@@ -61,7 +61,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
         setVariable("stopLossFlag", "1");
         setVariable("exitPrice", toString(t.price));
-        sellMarket(exchangeSetting, symbolSetting, AMOUNT, (currentOrderId + 1));
+        sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, (currentOrderId + 1));
       }
     }
   } else if (entryState == "sell") { # Buy Signal
@@ -74,7 +74,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
         setVariable("stopLossFlag", "1");
         setVariable("exitPrice", toString(t.price));
-        buyMarket(exchangeSetting, symbolSetting, AMOUNT, (currentOrderId + 1));
+        buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, (currentOrderId + 1));
       }
     }
   }
@@ -103,8 +103,8 @@ event onOwnOrderFilled(string exchange, transaction t) {
 void main() {
   initializeEnvironment();
 
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   
   addTimer(1 * 60 * 1000);
 }

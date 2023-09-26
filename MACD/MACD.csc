@@ -18,8 +18,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 integer FASTPERIOD      = 12;
 integer SLOWPERIOD      = 26;
 integer SIGNALPERIOD    = 9;
@@ -50,8 +50,8 @@ float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 # Additional needs in backtest mode
 float   minFillOrderPercentage = 0.0;
@@ -63,8 +63,8 @@ boolean stopLossFlag    = false;
 boolean stopped         = false;
 
 # Starting MACD algo
-setCurrentChartsExchange(exchangeSetting);
-setCurrentChartsSymbol(symbolSetting);
+setCurrentChartsExchange(EXCHANGESETTING);
+setCurrentChartsSymbol(SYMBOLSETTING);
 
 integer profitSeriesID = 0;
 string profitSeriesColor = "green";
@@ -79,7 +79,7 @@ void main() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
@@ -92,7 +92,7 @@ void main() {
 
   integer resolution = interpretResol(RESOL);
 
-  bar barData[] = getTimeBars(exchangeSetting, symbolSetting, 0, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
+  bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
 
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
@@ -156,8 +156,8 @@ void main() {
   print("---------------------------------");
 
   # Starting MACD algo
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setChartDataTitle("MACD");
 
@@ -181,18 +181,18 @@ void main() {
 
   tradeLogListFilePath = tradeLogListFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   tradeLogListFile = fopen(tradeLogListFilePath, "a");
-  fwrite(tradeLogListFile, "Trade,Time," + symbolSetting + ",Max" + getBaseCurrencyName(symbolSetting) + ",Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,Drawdown,\n");
+  fwrite(tradeLogListFile, "Trade,Time," + SYMBOLSETTING + ",Max" + getBaseCurrencyName(SYMBOLSETTING) + ",Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,Drawdown,\n");
   fclose(tradeLogListFile);
 
-  baseCurrencyBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-  quoteCurrencyBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
   addTimer(resolution * 60 * 1000);
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
 
@@ -206,7 +206,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
     if (position == "long") {         # Bought -> SELL
       print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
-      sellMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
       prevPosition = "long";
       sellCount ++;
@@ -215,7 +215,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
     if (position == "short") {        # Sold -> Buy
       print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
-      buyMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
       prevPosition = "short";
       buyCount ++;
@@ -246,7 +246,7 @@ event onPubOrderFilled(string exchange, transaction t) {
       currentOrderId++;
       print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
   
-      buyMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
 
       if (position == "flat") {
         if (prevPosition == "") {
@@ -270,7 +270,7 @@ event onPubOrderFilled(string exchange, transaction t) {
       currentOrderId++;
       print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
 
-      sellMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+      sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
         
       if (position == "flat") {
         if (prevPosition == "") {
@@ -299,7 +299,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
 event onOwnOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
   

@@ -16,8 +16,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 float   AFINIT          = 0.02;
 float   AFMAX           = 0.2;
 float   AFSTEP          = 0.02;
@@ -66,7 +66,7 @@ transaction transactions[];
 
 event onOwnOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
 
@@ -150,13 +150,13 @@ void main() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
   }
 
-  bar barData[] = getTimeBars(exchangeSetting, symbolSetting, 0, 3, resolution * 60 * 1000 * 1000);
+  bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, 3, resolution * 60 * 1000 * 1000);
   if (sizeof(barData) < 3) {
     print("Initial bar fetching failed! " + toString(sizeof(barData)) + " fetched. Please restart the script.");
     return;
@@ -203,8 +203,8 @@ void main() {
 
   print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
 
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
 
   setChartDataTitle("PSAR - " + toString(AFINIT) + ", " + toString(AFMAX) + ", " + toString(AFSTEP));
@@ -229,16 +229,16 @@ void main() {
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, "Trade,Time," + symbolSetting + ",Max" + getBaseCurrencyName(symbolSetting) + ",Prof" + getQuoteCurrencyName(symbolSetting) + ",Acc,Drawdown,\n");
+  fwrite(logFile, "Trade,Time," + SYMBOLSETTING + ",Max" + getBaseCurrencyName(SYMBOLSETTING) + ",Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,Drawdown,\n");
   fclose(logFile);
 
-  baseCurrencyBalance = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-  quoteCurrencyBalance = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
-  if (exchange != exchangeSetting || t.symbol != symbolSetting) {
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
   
@@ -337,7 +337,7 @@ event onPubOrderFilled(string exchange, transaction t) {
       if (oldTrend != "up") {
         if (isConnectionGood == true) {
           currentOrderId++;
-          buyMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+          buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
           print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);
@@ -349,7 +349,7 @@ event onPubOrderFilled(string exchange, transaction t) {
       if (oldTrend != "down") {
         if (isConnectionGood == true) {
           currentOrderId++;
-          sellMarket(exchangeSetting, symbolSetting, AMOUNT, currentOrderId);
+          sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
           print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);

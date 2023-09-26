@@ -16,8 +16,8 @@ import "library.csh";
 
 #############################################
 # User settings
-string  exchangeSetting = "Centrabit";
-string  symbolSetting   = "LTC/BTC";
+string  EXCHANGESETTING = "Centrabit";
+string  SYMBOLSETTING   = "LTC/BTC";
 float   AFINIT          = 0.02;
 float   AFMAX           = 0.2;
 float   AFSTEP          = 0.02;
@@ -51,8 +51,8 @@ float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(exchangeSetting, getBaseCurrencyName(symbolSetting));
-float   quoteCurrencyBalance  = getAvailableBalance(exchangeSetting, getQuoteCurrencyName(symbolSetting));
+float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 # Additional needs in backtest mode
 float   minFillOrderPercentage = 0.0;
@@ -71,9 +71,9 @@ transaction entryTran;
 
 void initCommonParameters() {
   if (toBoolean(getVariable("EXCHANGE"))) 
-    exchangeSetting = getVariable("EXCHANGE");
+    EXCHANGESETTING = getVariable("EXCHANGE");
   if (toBoolean(getVariable("CURRNCYPAIR"))) 
-    symbolSetting = getVariable("CURRNCYPAIR");
+    SYMBOLSETTING = getVariable("CURRNCYPAIR");
   if (toBoolean(getVariable("RESOLUTION"))) 
     RESOL = getVariable("RESOLUTION");
   if (toBoolean(getVariable("AMOUNT"))) 
@@ -259,7 +259,7 @@ void onTimeOutTest(integer i) {
     }
   }
 
-  transaction barTransactions[] = getPubTrades(exchangeSetting, symbolSetting, barData[i].timestamp, barData[i].timestamp+barSize);
+  transaction barTransactions[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, barData[i].timestamp, barData[i].timestamp+barSize);
   currentTran = barTransactions[0];
   transaction t;
 
@@ -305,7 +305,7 @@ void onTimeOutTest(integer i) {
 void backtest() {
   initCommonParameters();
 
-  print("^^^^^^^^^^^^^^^^^ ParabolicSAR Backtest ( EXCHANGE : " + exchangeSetting + ", CURRENCY PAIR : " + symbolSetting + ") ^^^^^^^^^^^^^^^^^");
+  print("^^^^^^^^^^^^^^^^^ ParabolicSAR Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^^^^^^^^^");
   print("");
 
   print(STARTDATETIME + " to " + ENDDATETIME);
@@ -313,7 +313,7 @@ void backtest() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
   integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(exchangeSetting, symbolSetting, conTestStartTime, conTestEndTime);
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
   if (sizeof(conTestTrans) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
@@ -338,7 +338,7 @@ void backtest() {
   }
 
   integer barCnt = testTimeLength / barSize + 3;
-  barData = getTimeBars(exchangeSetting, symbolSetting, testEndTime, barCnt, barSize);
+  barData = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testEndTime, barCnt, barSize);
   if (sizeof(barData) == 0) {
     print("Lookback bar data fetching failed! " + toString(sizeof(barData)) + " fetched.");
     return;
@@ -381,8 +381,8 @@ void backtest() {
     }
   }
 
-  setCurrentChartsExchange(exchangeSetting);
-  setCurrentChartsSymbol(symbolSetting);
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
 
   setChartBarWidth(barSize);
@@ -402,7 +402,7 @@ void backtest() {
   configureLine(true, "green", 2.0);
 
   setCurrentChartPosition("1");
-  setChartDataTitle(getBaseCurrencyName(symbolSetting) + " Balance");
+  setChartDataTitle(getBaseCurrencyName(SYMBOLSETTING) + " Balance");
   setChartYRange(0.0, 200.0); 
   setCurrentSeriesName("Balance");
   configureLine(true, "green", 2.0);
@@ -410,11 +410,11 @@ void backtest() {
   configureScatter(true, "red", "red", 7.0);
   
 
-  float minAskOrderPrice = getOrderBookAsk(exchangeSetting, symbolSetting);
-  float maxBidOrderPrice = getOrderBookBid(exchangeSetting, symbolSetting);
+  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
+  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
 
-  order askOrders[] = getOrderBookByRangeAsks(exchangeSetting, symbolSetting, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(exchangeSetting, symbolSetting, 0.0, 1.0);
+  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
+  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
 
 
   minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
@@ -452,7 +452,7 @@ void backtest() {
     if (i == sizeof(barData)-1) {
       shouldBePositionClosed = currentOrderId % 2;
       if ((shouldBePositionClosed == 1)) {
-        transaction barTransactions[] = getPubTrades(exchangeSetting, symbolSetting, barData[i].timestamp, barData[i].timestamp+barSize);
+        transaction barTransactions[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, barData[i].timestamp, barData[i].timestamp+barSize);
         currentTran = barTransactions[0];
         transaction t;
 
@@ -541,11 +541,11 @@ void backtest() {
   
   string tradeLogListTitle = "\tTrade\tTime";
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), symbolSetting);
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), SYMBOLSETTING);
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(SYMBOLSETTING));
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(symbolSetting));
+  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(SYMBOLSETTING));
   tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
 
   print("--------------------------------------------------------------------------------------------------------------------------");

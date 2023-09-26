@@ -1,5 +1,5 @@
 #
-# library.csh version 2.0.1 - Copyright(C) 2022 Centrabit.com ( Author: smartalina0915@gmail.com)
+# library.csh version 2.1.0 - Copyright(C) 2022 Centrabit.com ( Author: smartalina0915@gmail.com)
 # 
 #  - SMA(Simple Moving Average)          01/20/2023
 #  - STDDEV(Standard Deviation)          01/20/2023
@@ -14,6 +14,7 @@ script library;
 # Dependancies
 import Math;
 import Strings;
+import IO;
 
 # SMA(Simple Moving Average) calculation
 #  @ prototype
@@ -294,4 +295,36 @@ string getQuoteCurrencyName(string symbol) {
   string baseCurrencyName = substring(symbol, indicator+1, symbolLength-indicator);
 
   return baseCurrencyName;
+}
+
+#  Print order logs for a transaction.
+#  @prototype
+#       void printOrderLogs(integer ID, string signal, integer time, float price, float amount, string extra)
+#  @params
+#       ID: The ID of the order
+#       signal: The type of order (e.g., "BUY", "SELL")
+#       time: Time the order was executed, in seconds since the epoch
+#       price: The price at which the transaction occurred
+#       amount: The amount of the asset that was transacted
+#       extra: Additional information to include in the log (e.g., fee, comments)
+#  @return
+#       None
+void printOrderLogs(integer ID, string signal, integer time, float price, float amount, string extra) {
+  print(toString(ID) + " " + signal + "\t[" + timeToString(time, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(price) + "  Amount: " + toString(amount) + extra);
+}
+
+#  Print fill logs for a transaction.
+#  @prototype
+#       void printFillLogs(transaction t, string totalProfit)
+#  @params
+#       t: Transaction object containing details such as market, price, amount, and fee
+#       totalProfit: A string representation of the total profit from the transaction; empty string if not applicable
+#  @return
+#       None
+void printFillLogs(transaction t, string totalProfit) {
+  if (totalProfit == "") {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee));
+  } else {
+    print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee) + ",  Total profit: " + totalProfit);
+  }
 }
