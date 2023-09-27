@@ -33,7 +33,7 @@ float   FEE             = 0.01;                               # taker fee in per
 float   AMOUNT          = 1.0;                             # The amount of buy or sell order at once
 string  STARTDATETIME   = "2023-03-01 00:00:00";   # Backtest start datetime
 string  ENDDATETIME     = "now";                     # Backtest end datetime
-float   STOPLOSSAT      = 0.05;                            # Stop loss point at percentage
+float   STOPLOSSAT      = 0.05;                            # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;
 
 #############################################

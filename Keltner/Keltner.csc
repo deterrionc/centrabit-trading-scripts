@@ -24,7 +24,7 @@ integer EMALEN          = 20;                            # EMA period length
 float   ATRMULTIPLIER   = 2.0;                           # ATR multiplier
 string  RESOL           = "1m";                          # Bar resolution
 float   AMOUNT          = 1.0;                           # The amount of buy or sell order at once
-float   STOPLOSSAT      = 0.05;                          # Stop loss point at percentage
+float   STOPLOSSAT      = 0.05;                          # Stoploss as fraction of price
 string  logFilePath     = "c:/keltner_log_tradelist_";   # Please make sure this path any drive except C:
 boolean USETRAILINGSTOP = false;
 #############################################
@@ -156,7 +156,7 @@ event onPubOrderFilled(string exchange, transaction t) {
     currentOrderId++;
 
     if (position == "long") {     # Bought -> Sell
-      print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       buyStopped = true;
       sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
@@ -166,7 +166,7 @@ event onPubOrderFilled(string exchange, transaction t) {
     }
 
     if (position == "short") {        # Sold -> Buy
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       sellStopped = true;
       buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
@@ -197,7 +197,6 @@ event onPubOrderFilled(string exchange, transaction t) {
 
       if (sellSignal) {
         currentOrderId++;
-        print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price " + toString(t.price) + "  amount: "+ toString(AMOUNT));
 
         if (currentOrderId == 1) {
           printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
