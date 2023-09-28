@@ -178,6 +178,7 @@ event onPubOrderFilled(string exchange, transaction t) {
           # print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
           
           currentOrderId++;
+          currentTran = t;
 
           if (currentOrderId == 1) {
             printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
@@ -186,6 +187,8 @@ event onPubOrderFilled(string exchange, transaction t) {
             printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
             buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
           }
+
+          drawChartPointToSeries("Buy", t.tradeTime, t.price);
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);
         }
@@ -200,6 +203,7 @@ event onPubOrderFilled(string exchange, transaction t) {
           # print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
 
           currentOrderId++;
+          currentTran = t;
 
           if (currentOrderId == 1) {
             printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
@@ -208,6 +212,8 @@ event onPubOrderFilled(string exchange, transaction t) {
             printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
             sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
           }
+
+          drawChartPointToSeries("Sell", t.tradeTime, t.price);
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);
         }
@@ -244,12 +250,12 @@ event onOwnOrderFilled(string exchange, transaction t) {
     printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     float profit;
     if (t.isAsk == false) {
-      drawChartPointToSeries("Sell", t.tradeTime, t.price);
+      # drawChartPointToSeries("Sell", t.tradeTime, t.price);
       tradeSign = "LX";
       profit = amount - entryAmount - t.fee - entryFee;
       tradeLog += "\tLX  ";
     } else {
-      drawChartPointToSeries("Buy", t.tradeTime, t.price);
+      # drawChartPointToSeries("Buy", t.tradeTime, t.price);
       tradeSign = "SX";
       profit = entryAmount - amount - t.fee - entryFee;
       tradeLog += "\tSX  ";
@@ -288,7 +294,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
     fileLog(tradeLog);
 
     profitSeriesID++;
-    currentTran = t;
+    # currentTran = t;
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
     drawChartPoint(entryTran.tradeTime, entryTran.price);
@@ -314,11 +320,11 @@ event onOwnOrderFilled(string exchange, transaction t) {
     if (t.isAsk == false) {
       tradeSign = "SE";
       tradeLog += "\tSE\t";
-      drawChartPointToSeries("Sell", t.tradeTime, t.price);
+      # drawChartPointToSeries("Sell", t.tradeTime, t.price);
     } else {
       tradeSign = "LE";
       tradeLog += "\tLE\t";
-      drawChartPointToSeries("Buy", t.tradeTime, t.price);
+      # drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
     entryAmount = amount;
     entryFee = t.fee;
@@ -442,7 +448,7 @@ void main() {
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, "Trade,Time," + SYMBOLSETTING + ",Max" + getBaseCurrencyName(SYMBOLSETTING) + ",Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,Drawdown,\n");
+  fwrite(logFile, ",Trade,Time," + SYMBOLSETTING + ",," + getBaseCurrencyName(SYMBOLSETTING) + "(per),Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,\n");
   fclose(logFile);
 
   baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));

@@ -30,6 +30,7 @@ boolean USETRAILINGSTOP = false;
 #############################################
 
 # Trading information
+float   stopVibrate     = 0.001;                         # Display the difference in oscillation stops as a fraction
 string  position        = "flat";
 string  prevPosition    = "";         # "", "long", "short"
 float   ema             = 100.0;
@@ -80,6 +81,15 @@ void fileLog(string tradeLog) {
   logline += "\n";
   fwrite(logFile, logline);
   fclose(logFile);
+}
+
+boolean invalidUpperLower() {
+  float difference = (upperBand - lowerBand) / lowerBand;
+  if (difference < stopVibrate) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 boolean trailingStopTick(float price) {
@@ -139,16 +149,22 @@ event onPubOrderFilled(string exchange, transaction t) {
     isConnectionGood = false;
   }
 
-  currentTran = t;
   drawChartPointToSeries("Middle", t.tradeTime, ema);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
 
-  if (isConnectionGood == false)
+  if (isConnectionGood == false) {
     return;
+  }
 
-  if (trailingStopTick(t.price))
+  if (trailingStopTick(t.price)) {
     return;
+  }
+
+  if (invalidUpperLower()) {
+    print("STOP VIBRATION");
+    return;
+  }
   
   stopLossFlag = toBoolean(getVariable("stopLossFlag"));
 
@@ -197,6 +213,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
       if (sellSignal) {
         currentOrderId++;
+        currentTran = t;
 
         if (currentOrderId == 1) {
           printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
@@ -241,6 +258,7 @@ event onPubOrderFilled(string exchange, transaction t) {
 
       if (buySignal) {
         currentOrderId++;
+        currentTran = t;
         
         if (currentOrderId == 1) {
           printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
