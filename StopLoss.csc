@@ -21,7 +21,7 @@ import "library.csh";
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 float   AMOUNT          = 0.1;                              # The amount of buy or sell order at once
-float   STOPLOSSAT      = 0.01;                             # Stop loss point at percentage
+float   STOPLOSSAT      = 0.01;                             # Stoploss as fraction of price
 string  logFilePath     = "C:/bb_log_stop_point_list_";     # Please make sure this path any drive except C:
 #############################################
 

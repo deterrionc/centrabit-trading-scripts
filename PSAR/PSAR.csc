@@ -57,183 +57,20 @@ boolean reversed;
 integer resolution = interpretResol(RESOL);
 
 integer profitSeriesID = 0;
-string profitSeriesColor = "green";
+string  profitSeriesColor = "green";
+string  tradeSign         = "";
 transaction currentTran;
 transaction entryTran;
 
 integer lastBarTickedTime;
 transaction transactions[];
 
-event onOwnOrderFilled(string exchange, transaction t) {
-  # Check exchange and currency is correct when order filled
-  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
-    return;
-  }
-
-  float amount = t.price * t.amount;
-  feeTotal += t.fee;
-
-  if (t.isAsk == false) {                # when sell order fillend
-    sellTotal += amount;
-    baseCurrencyBalance -= AMOUNT;
-    quoteCurrencyBalance += amount;
-  } else {                                 # when buy order fillend
-    buyTotal += amount;
-    baseCurrencyBalance += AMOUNT;
-    quoteCurrencyBalance -= amount;
-  }
-
-  integer isOddOrder = t.marker % 2;
-  integer tradeNumber = (t.marker-1) / 2 + 1;
-  string tradeLog = "";
-
-  if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
-    float profit;
-    if (t.isAsk == false) {
-      drawChartPointToSeries("Sell", t.tradeTime, t.price);
-      profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += ",LX ";
-    } else {
-      drawChartPointToSeries("Buy", t.tradeTime, t.price);
-      profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += ",SX ";
-    }
-
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "," + toString(t.price) + ",," + toString(profit) + "," + toString(sellTotal - buyTotal - feeTotal)+"\n";
-
-    string tradeResult;
-    if (profit >= 0.0 ) {
-      totalWin+= profit;
-      winCount++;
-      if (profitSeriesColor=="red") {
-        profitSeriesColor="green";
-      }
-    } else {
-      totalLoss+= fabs(profit);
-      lossCount++;
-      if (profitSeriesColor == "green") {
-        profitSeriesColor="red";
-      }
-    }
-
-    profitSeriesID++;
-    currentTran = t;
-    # print("PROFIT SERIES ID");
-    # print(profitSeriesID);
-    setCurrentSeriesName("Direction" + toString(profitSeriesID));
-    configureLine(false, profitSeriesColor, 2.0);
-    drawChartPoint(entryTran.tradeTime, entryTran.price);
-    drawChartPoint(currentTran.tradeTime, currentTran.price);
-    entryTran = currentTran;
-  } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
-    tradeLog = toString(tradeNumber);
-    if (t.isAsk == false) {
-      tradeLog += ",SE ";
-      drawChartPointToSeries("Sell", t.tradeTime, t.price);
-    } else {
-      tradeLog += ",LE ";
-      drawChartPointToSeries("Buy", t.tradeTime, t.price);
-    }
-    entryAmount = amount;
-    entryFee = t.fee;
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "," + toString(t.price) + "," + toString(AMOUNT) + "\n";
-    entryTran = t;
-  }
+void fileLog(string tradeLog) {
   logFile = fopen(logFilePath, "a");
-  fwrite(logFile, tradeLog);
+  string logline = strreplace(tradeLog, "\t", ",");
+  logline += "\n";
+  fwrite(logFile, logline);
   fclose(logFile);
-}
-
-void main() {
-  # Connection Checking
-  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
-  integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
-  if (sizeof(conTestTrans) == 0) {
-    print("Fetching Data failed. Please check the connection and try again later");
-    exit;
-  }
-
-  bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, 3, resolution * 60 * 1000 * 1000);
-  if (sizeof(barData) < 3) {
-    print("Initial bar fetching failed! " + toString(sizeof(barData)) + " fetched. Please restart the script.");
-    return;
-  }
-
-  lastBarTickedTime = barData[sizeof(barData)-1].timestamp + resolution * 60 * 1000 * 1000;
-
-  if (barData[1].highPrice >= barData[0].highPrice) {
-    trend = "up";       # the trend of the day before
-  } else {
-    trend = "down";
-  }
-
-  # PSAR initialization
-  highs >> barData[1].highPrice;
-  highs >> barData[2].highPrice;
-  lows >> barData[1].lowPrice;
-  lows >> barData[2].lowPrice;
-
-  reversed = false;
-
-  if (trend == "up") {
-    psar = fmin(lows[0], lows[1]);
-    ep = fmax(highs[0], highs[1]);
-    if (highs[1] > psar) {
-      trend = "up";
-      reversed = false;
-    } else {
-      trend = "down";
-      reversed = true;
-    }
-  } else {
-    trend = "down";  
-    psar = fmax(highs[0], highs[1]);
-    ep = fmin(lows[0], lows[1]);
-    if (lows[1] < psar) {
-      trend = "down";
-      reversed = false;
-    } else {
-      trend = "up";
-      reversed = true;
-    }
-  }
-
-  print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
-
-  setCurrentChartsExchange(EXCHANGESETTING);
-  setCurrentChartsSymbol(SYMBOLSETTING);
-  clearCharts();
-
-  setChartDataTitle("PSAR - " + toString(AFINIT) + ", " + toString(AFMAX) + ", " + toString(AFSTEP));
-
-  setCurrentSeriesName("Sell");
-  configureScatter(true, "red", "red", 7.0);
-  setCurrentSeriesName("Buy");
-  configureScatter(true, "#7dfd63", "#187206", 7.0,);
-  setCurrentSeriesName("Failed Order");
-  configureScatter(true, "grey", "black", 7.0,);
-  setCurrentSeriesName("Upword");
-  configureScatter(true, "#faf849", "#6d6c0d", 7.0);
-  setCurrentSeriesName("Downward");
-  configureScatter(true, "#6beafd", "#095b67", 7.0,);
-
-  if (trend == "up") {
-    drawChartPointToSeries("Upword", lastBarTickedTime, psar);
-  } else {
-    drawChartPointToSeries("Downward", lastBarTickedTime, psar);
-  }
-
-  integer now = getCurrentTime();
-  logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
-  logFile = fopen(logFilePath, "a");
-  fwrite(logFile, "Trade,Time," + SYMBOLSETTING + ",Max" + getBaseCurrencyName(SYMBOLSETTING) + ",Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,Drawdown,\n");
-  fclose(logFile);
-
-  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
@@ -336,9 +173,22 @@ event onPubOrderFilled(string exchange, transaction t) {
       # print("trend - " + trend + ", " + "old trend - " + oldTrend);
       if (oldTrend != "up") {
         if (isConnectionGood == true) {
+          # currentOrderId++;
+          # buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
+          # print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+          
           currentOrderId++;
-          buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
-          print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+          currentTran = t;
+
+          if (currentOrderId == 1) {
+            printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
+            buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT / 2.0, currentOrderId);
+          } else {
+            printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
+            buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
+          }
+
+          drawChartPointToSeries("Buy", t.tradeTime, t.price);
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);
         }
@@ -348,9 +198,22 @@ event onPubOrderFilled(string exchange, transaction t) {
       drawChartPointToSeries("Downward", barEndTimeStamp, psar);
       if (oldTrend != "down") {
         if (isConnectionGood == true) {
+          # currentOrderId++;
+          # sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
+          # print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+
           currentOrderId++;
-          sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
-          print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+          currentTran = t;
+
+          if (currentOrderId == 1) {
+            printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
+            sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT / 2.0, currentOrderId);
+          } else {
+            printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
+            sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
+          }
+
+          drawChartPointToSeries("Sell", t.tradeTime, t.price);
         } else {
           drawChartPointToSeries("Failed Order", t.tradeTime, t.price);
         }
@@ -358,6 +221,238 @@ event onPubOrderFilled(string exchange, transaction t) {
     }
     delete transactions;
   }
+}
+
+event onOwnOrderFilled(string exchange, transaction t) {
+  # Check exchange and currency is correct when order filled
+  if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
+    return;
+  }
+
+  float amount = t.price * t.amount;
+  feeTotal += t.fee;
+
+  if (t.isAsk == false) {                # when sell order fillend
+    sellTotal += amount;
+    baseCurrencyBalance -= AMOUNT;
+    quoteCurrencyBalance += amount;
+  } else {                                 # when buy order fillend
+    buyTotal += amount;
+    baseCurrencyBalance += AMOUNT;
+    quoteCurrencyBalance -= amount;
+  }
+
+  integer isOddOrder = t.marker % 2;
+  integer tradeNumber = (t.marker-1) / 2 + 1;
+  string tradeLog = "";
+
+  if (isOddOrder == 0) {
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
+    float profit;
+    if (t.isAsk == false) {
+      # drawChartPointToSeries("Sell", t.tradeTime, t.price);
+      tradeSign = "LX";
+      profit = amount - entryAmount - t.fee - entryFee;
+      tradeLog += "\tLX  ";
+    } else {
+      # drawChartPointToSeries("Buy", t.tradeTime, t.price);
+      tradeSign = "SX";
+      profit = entryAmount - amount - t.fee - entryFee;
+      tradeLog += "\tSX  ";
+    }
+
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "," + toString(t.price) + ",," + toString(profit) + "," + toString(sellTotal - buyTotal - feeTotal)+"\n";
+
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+    fileLog(tradeLog);
+
+    if (tradeSign == "LX") {
+      tradeLog = "\tSE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      fileLog(tradeLog);
+    }
+
+    if (tradeSign == "SX") {
+      tradeLog = "\tLE\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
+      fileLog(tradeLog);
+    }
+
+    if (profit >= 0.0) {
+      totalWin += profit;
+      winCount++;
+      if (profitSeriesColor == "red") {
+        profitSeriesColor = "green";
+      }
+    } else {
+      totalLoss += fabs(profit);
+      lossCount++;
+      if (profitSeriesColor == "green") {
+        profitSeriesColor = "red";
+      }
+    }
+    fileLog(tradeLog);
+
+    profitSeriesID++;
+    # currentTran = t;
+    setCurrentSeriesName("Direction" + toString(profitSeriesID));
+    configureLine(false, profitSeriesColor, 2.0);
+    drawChartPoint(entryTran.tradeTime, entryTran.price);
+    drawChartPoint(currentTran.tradeTime, currentTran.price);
+    entryTran = currentTran;
+  } else {
+    printFillLogs(t, "");
+
+    if (tradeSign == "LX") {
+      tradeLog = "\tSX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      fileLog(tradeLog);
+    }
+    if (tradeSign == "SX") {
+      tradeLog = "\tLX\t";
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
+      fileLog(tradeLog);
+    }
+
+    tradeLog = "   ";  
+    tradeLog += toString(tradeNumber);
+
+    if (t.isAsk == false) {
+      tradeSign = "SE";
+      tradeLog += "\tSE\t";
+      # drawChartPointToSeries("Sell", t.tradeTime, t.price);
+    } else {
+      tradeSign = "LE";
+      tradeLog += "\tLE\t";
+      # drawChartPointToSeries("Buy", t.tradeTime, t.price);
+    }
+    entryAmount = amount;
+    entryFee = t.fee;
+
+    if (tradeSign == "SE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "green";
+      } else {
+        profitSeriesColor = "red";
+      }
+    }
+
+    if (tradeSign == "LE") {
+      if (currentTran.price > entryTran.price) {
+        profitSeriesColor = "red";
+      } else {
+        profitSeriesColor = "green";
+      }
+    }
+
+    if (tradeNumber == 1) {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      fileLog(tradeLog);
+    } else {
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT / 2.0);
+      fileLog(tradeLog);
+    }
+
+    if (tradeNumber > 1) {
+      profitSeriesID++;
+      setCurrentSeriesName("Direction" + toString(profitSeriesID));
+      configureLine(false, profitSeriesColor, 2.0);
+      drawChartPoint(entryTran.tradeTime, entryTran.price);
+      drawChartPoint(currentTran.tradeTime, currentTran.price);
+    }
+    
+    entryTran = currentTran;
+  }
+}
+
+void main() {
+  # Connection Checking
+  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
+  integer conTestEndTime = getCurrentTime();
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
+  if (sizeof(conTestTrans) == 0) {
+    print("Fetching Data failed. Please check the connection and try again later");
+    exit;
+  }
+
+  bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, 3, resolution * 60 * 1000 * 1000);
+  if (sizeof(barData) < 3) {
+    print("Initial bar fetching failed! " + toString(sizeof(barData)) + " fetched. Please restart the script.");
+    return;
+  }
+
+  lastBarTickedTime = barData[sizeof(barData)-1].timestamp + resolution * 60 * 1000 * 1000;
+
+  if (barData[1].highPrice >= barData[0].highPrice) {
+    trend = "up";       # the trend of the day before
+  } else {
+    trend = "down";
+  }
+
+  # PSAR initialization
+  highs >> barData[1].highPrice;
+  highs >> barData[2].highPrice;
+  lows >> barData[1].lowPrice;
+  lows >> barData[2].lowPrice;
+
+  reversed = false;
+
+  if (trend == "up") {
+    psar = fmin(lows[0], lows[1]);
+    ep = fmax(highs[0], highs[1]);
+    if (highs[1] > psar) {
+      trend = "up";
+      reversed = false;
+    } else {
+      trend = "down";
+      reversed = true;
+    }
+  } else {
+    trend = "down";  
+    psar = fmax(highs[0], highs[1]);
+    ep = fmin(lows[0], lows[1]);
+    if (lows[1] < psar) {
+      trend = "down";
+      reversed = false;
+    } else {
+      trend = "up";
+      reversed = true;
+    }
+  }
+
+  print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
+
+  setCurrentChartsExchange(EXCHANGESETTING);
+  setCurrentChartsSymbol(SYMBOLSETTING);
+  clearCharts();
+
+  setChartDataTitle("PSAR - " + toString(AFINIT) + ", " + toString(AFMAX) + ", " + toString(AFSTEP));
+
+  setCurrentSeriesName("Sell");
+  configureScatter(true, "red", "red", 7.0);
+  setCurrentSeriesName("Buy");
+  configureScatter(true, "#7dfd63", "#187206", 7.0,);
+  setCurrentSeriesName("Failed Order");
+  configureScatter(true, "grey", "black", 7.0,);
+  setCurrentSeriesName("Upword");
+  configureScatter(true, "#faf849", "#6d6c0d", 7.0);
+  setCurrentSeriesName("Downward");
+  configureScatter(true, "#6beafd", "#095b67", 7.0,);
+
+  if (trend == "up") {
+    drawChartPointToSeries("Upword", lastBarTickedTime, psar);
+  } else {
+    drawChartPointToSeries("Downward", lastBarTickedTime, psar);
+  }
+
+  integer now = getCurrentTime();
+  logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
+  logFile = fopen(logFilePath, "a");
+  fwrite(logFile, ",Trade,Time," + SYMBOLSETTING + ",," + getBaseCurrencyName(SYMBOLSETTING) + "(per),Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,\n");
+  fclose(logFile);
+
+  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 }
 
 main();

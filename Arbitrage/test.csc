@@ -17,7 +17,7 @@ integer SMALEN          = 20;                       # SMA period length
 float   STDDEVSETTING   = 1.0;                      # Standard Deviation
 string  RESOL           = "1m";                     # Bar resolution
 float   AMOUNT          = 0.1;                      # The amount of buy or sell order at once
-float   STOPLOSSAT      = 0.01;                     # Stop loss point at percentage
+float   STOPLOSSAT      = 0.01;                     # Stoploss as fraction of price
 boolean USETRAILINGSTOP = true;
 
 print(EXCHANGESETTING);
