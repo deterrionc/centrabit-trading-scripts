@@ -252,18 +252,25 @@ bar generateBar(transaction[] data) {
 
 # Calc ATR(Average True Range)
 #  @ prototype
-#      float ATR(bar last, bar current)
+#      float ATR(bar data)
 #  @ params
-#      last: last bar
-#       cur: current bar
+#      data: bar array
 #  @ return
 #      ATR value
-float ATR(bar last, bar current) {
-  float atr1 = current.highPrice - current.lowPrice;
-  float atr2 = current.highPrice - last.closePrice;
-  float atr3 = last.closePrice - current.lowPrice;
-  float atr = fmax(atr1, atr2);
-  atr = fmax(atr, atr3);
+float ATR(bar[] data) {
+  integer barLength = sizeof(data);
+  float trSum = 0.0;
+  for (integer i = 1; i < barLength; i++) {
+    bar current = data[i];
+    bar last = data[i - 1];
+    float tr1 = current.highPrice - current.lowPrice;
+    float tr2 = current.highPrice - last.closePrice;
+    float tr3 = last.closePrice - current.lowPrice;
+    float tr = fmax(tr1, tr2);
+    tr = fmax(tr, tr3);
+    trSum += tr;
+  }
+  float atr = trSum / toFloat(barLength - 1);
   return atr;
 }
 
