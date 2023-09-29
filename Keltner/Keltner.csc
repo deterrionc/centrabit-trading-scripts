@@ -1,4 +1,4 @@
-# Keltner trading strategy 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# Keltner trading strategy 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # Script Name
 script Keltner;
@@ -22,6 +22,7 @@ string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 integer EMALEN          = 20;                            # EMA period length
 float   ATRMULTIPLIER   = 2.0;                           # ATR multiplier
+integer ATRLENGTH       = 14;                            # ATR period length (must be over than 3)
 string  RESOL           = "1m";                          # Bar resolution
 float   AMOUNT          = 1.0;                           # The amount of buy or sell order at once
 float   STOPLOSSAT      = 0.05;                          # Stoploss as fraction of price
@@ -50,27 +51,23 @@ float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-float   baseCurrencyBalance;
-float   quoteCurrencyBalance;
-float   barPriceInEMAPeriod[];
-
-file logFile;
-
+float   baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+float   quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
+float   emaPrices[];
+file    logFile;
 float   lastOwnOrderPrice = 0.0;
 
 # Stop-loss and trailing stop info
 float   lockedPriceForProfit  = 0.0;
-string  positionStoppedAt     = "";
 
 string  tradeSign             = "";
 boolean stopLossFlag          = false;
 boolean buyStopped            = false;
 boolean sellStopped           = false;
-bar     lastBar;
+bar     atrBars[];
 integer profitSeriesID        = 0;
 string  profitSeriesColor     = "green";
 string  tradeLogList[];
-integer lastBarTickedTime;
 transaction transactions[];
 transaction currentTran;
 transaction entryTran;
@@ -111,21 +108,20 @@ boolean trailingStopTick(float price) {
   return false;
 }
 
-void updateKeltner() {
-  if (sizeof(transactions) == 0) {
-    return;
-  }
-  bar curBar = generateBar(transactions);
-  barPriceInEMAPeriod >> curBar.closePrice;
-  delete barPriceInEMAPeriod[0];
+void updateKeltnerParams(transaction t) {
+  delete transactions[0];
+  delete atrBars[0];
+  delete emaPrices[0];
 
-  ema = EMA(barPriceInEMAPeriod, EMALEN);
-  atr = ATR(lastBar, curBar);
+  emaPrices >> t.price;
+  transactions >> t;
+  bar tempBar = generateBar(transactions);
+  atrBars >> tempBar;
+
+  ema = EMA(emaPrices, EMALEN);
+  atr = ATR(atrBars);
   upperBand = ema + ATRMULTIPLIER * atr;
   lowerBand = ema - ATRMULTIPLIER * atr;
-
-  lastBar = curBar;
-  delete transactions;
 }
 
 event onPubOrderFilled(string exchange, transaction t) {
@@ -134,29 +130,11 @@ event onPubOrderFilled(string exchange, transaction t) {
     return;
   }
 
-  integer duration = t.tradeTime - lastBarTickedTime;
-  
-  if (duration < resolution * 60000000) {
-    transactions >> t;
-  } else {
-    updateKeltner();
-    lastBarTickedTime = t.tradeTime;
-  }
-  
-  integer between = t.tradeTime - getCurrentTime();
-  boolean isConnectionGood = true;
-  if (between > 1000000) {
-    isConnectionGood = false;
-  }
-
+  updateKeltnerParams(t);
   drawChartPointToSeries("Middle", t.tradeTime, ema);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
-
-  if (isConnectionGood == false) {
-    return;
-  }
-
+  
   if (trailingStopTick(t.price)) {
     return;
   }
@@ -426,46 +404,19 @@ event onOwnOrderFilled(string exchange, transaction t) {
   }
 }
 
-event onTimedOut(integer interval) {
-  updateKeltner();
-}
-
 void main() {
-  # Connection Checking
-  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
-  integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
-  if (sizeof(conTestTrans) == 0) {
-    print("Fetching Data failed. Please check the connection and try again later");
-    exit;
-  }
-
-  bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, EMALEN, resolution * 60 * 1000 * 1000);
-  integer barSize = sizeof(barsInPeriod);
-  if (barSize < EMALEN) {
-    print("Initializing failed. " + toString(barSize) + " of bars catched. Please restart the script.");
-    exit;
-  }
-  
-  lastBarTickedTime = barsInPeriod[sizeof(barsInPeriod)-1].timestamp + resolution * 60 * 1000 * 1000;
-  
-  for (integer i = 0; i < barSize; i++) {
-    barPriceInEMAPeriod >> barsInPeriod[i].closePrice;
-  }
+  # CHART SETTING
   setCurrentChartsExchange(EXCHANGESETTING);
   setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setChartTime(getCurrentTime() +  30 * 24 * 60*1000000);
-
   setChartDataTitle("Keltner - " + toString(EMALEN) + ", " + toString(ATRMULTIPLIER));
-
   setCurrentSeriesName("Sell");
   configureScatter(true, "red", "red", 7.0);
   setCurrentSeriesName("Buy");
   configureScatter(true, "#7dfd63", "#187206", 7.0,);
   setCurrentSeriesName("Failed Order");
   configureScatter(true, "grey", "black", 7.0,);
-
   setCurrentSeriesName("Middle");
   configureLine(true, "grey", 2.0);
   setCurrentSeriesName("Upper");
@@ -473,30 +424,47 @@ void main() {
   setCurrentSeriesName("Lower");
   configureLine(true, "#fd4700", 2.0);
 
-  ema = EMA(barPriceInEMAPeriod, EMALEN);
-  atr = ATR(barsInPeriod[barSize-2], barsInPeriod[barSize-1]);
+  # Connection Checking
+  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
+  integer conTestEndTime = getCurrentTime();
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
+  integer conTestTransLength = sizeof(conTestTrans);
+  if (conTestTransLength < (EMALEN + ATRLENGTH)) {
+    print("Fetching Data failed. Please check the connection and try again later");
+    exit;
+  }
+
+  for (integer j = 1; j <= ATRLENGTH; j++) {
+    transaction tempTrans[];
+    for (integer i = 1; i <= EMALEN; i++) {
+      tempTrans >> conTestTrans[conTestTransLength - 1 - ATRLENGTH - EMALEN + i + j];
+    }
+    bar tempBar = generateBar(tempTrans);
+    atrBars >> tempBar;
+  }
+
+  for (integer i = 1; i <= EMALEN; i++) {
+    transaction tempTran = conTestTrans[conTestTransLength - i];
+    transactions << tempTran;
+    emaPrices << tempTran.price;
+  }
+
+  ema = EMA(emaPrices, EMALEN);
+  atr = ATR(atrBars);
   upperBand = ema + ATRMULTIPLIER * atr;
   lowerBand = ema - ATRMULTIPLIER * atr;
-
-  lastBar = barsInPeriod[barSize-1];
 
   print("Initial EMA :" + toString(ema));
   print("Initial ATR :" + toString(atr));
   print("Initial keltnerUpperBand :" + toString(upperBand));
   print("Initial keltnerLowerBand :" + toString(lowerBand));
 
-  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
-
-  integer now = getCurrentTime();
-  logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
+  logFilePath = logFilePath + timeToString(getCurrentTime(), "yyyy_MM_dd_hh_mm_ss") + ".csv";
   logFile = fopen(logFilePath, "a");
   fwrite(logFile, ",Trade,Time," + SYMBOLSETTING + ",," + getBaseCurrencyName(SYMBOLSETTING) + "(per),Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,\n");
   fclose(logFile);
 
   print("--------------   Running   -------------------");
-
-  addTimer(resolution * 60 * 1000);
 }
 
 main();
