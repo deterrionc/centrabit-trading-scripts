@@ -36,6 +36,7 @@ float   ema             = 100.0;
 float   upperBand       = 0.0;
 float   lowerBand       = 0.0;
 float   atr             = 0.0;
+integer resolution      = interpretResol(RESOL);
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
@@ -48,7 +49,7 @@ float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-float   barPricesInEMAPeriod[];
+float   emaPrices[];
 string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
 float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
@@ -90,6 +91,22 @@ void initCommonParameters() {
 void saveResultToEnv(string accProfit, string expectancy) {
   setVariable("ACCPROFIT", accProfit);
   setVariable("EXPECTANCY", expectancy);  
+}
+
+void updateKeltnerParams(transaction t) {
+  delete transactions[0];
+  delete atrBars[0];
+  delete emaPrices[0];
+
+  emaPrices >> t.price;
+  transactions >> t;
+  bar tempBar = generateBar(transactions);
+  atrBars >> tempBar;
+
+  ema = EMA(emaPrices, EMALEN);
+  atr = ATR(atrBars);
+  upperBand = ema + ATRMULTIPLIER * atr;
+  lowerBand = ema - ATRMULTIPLIER * atr;
 }
 
 void onOwnOrderFilledTest(transaction t) {
@@ -448,10 +465,10 @@ void onTimeOutTest() {
     return;
   }
   bar curBar = generateBar(transactions);
-  barPricesInEMAPeriod >> curBar.closePrice;
-  delete barPricesInEMAPeriod[0];
+  emaPrices >> curBar.closePrice;
+  delete emaPrices[0];
 
-  ema = EMA(barPricesInEMAPeriod, EMALEN);
+  ema = EMA(emaPrices, EMALEN);
   atr = ATR(lastBar, curBar);
   upperBand = ema + ATRMULTIPLIER * atr;
   lowerBand = ema - ATRMULTIPLIER * atr;
@@ -495,15 +512,15 @@ float backtest() {
 
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
   transaction testTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
+  integer testTransLength = sizeof(testTrans);
 
-  integer resolution = interpretResol(RESOL);
 
   print("Preparing Bars in Period...");
   bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, EMALEN, resolution * 60 * 1000 * 1000);
   integer barSize = sizeof(barsInPeriod);
 
   for (integer i = 0; i < barSize; i++) {
-    barPricesInEMAPeriod >> barsInPeriod[i].closePrice;
+    emaPrices >> barsInPeriod[i].closePrice;
   }
 
   setCurrentChartsExchange(EXCHANGESETTING);
@@ -547,7 +564,7 @@ float backtest() {
 
   currentOrderId = 0;
 
-  ema = EMA(barPricesInEMAPeriod, EMALEN);
+  ema = EMA(emaPrices, EMALEN);
   atr = ATR(barsInPeriod[barSize-2], barsInPeriod[barSize-1]);
   upperBand = ema + ATRMULTIPLIER * atr;
   lowerBand = ema - ATRMULTIPLIER * atr;
