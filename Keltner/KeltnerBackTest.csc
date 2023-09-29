@@ -17,8 +17,9 @@ import "library.csh";
 # User settings
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
-integer EMALEN          = 70;                     # EMA period length
-float   ATRMULTIPLIER   = 3.0;                    # ATR multiplier
+integer EMALEN          = 20;                     # EMA period length
+float   ATRMULTIPLIER   = 2.0;                    # ATR multiplier
+integer ATRLENGTH       = 14;                     # ATR period length (must be over than 3)
 string  RESOL           = "30m";                  # Bar resolution
 float   AMOUNT          = 1.0;                    # The amount of buy or sell order at once
 string  STARTDATETIME   = "2023-06-14 00:00:00";  # Backtest start datetime
@@ -514,13 +515,24 @@ float backtest() {
   transaction testTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
   integer testTransLength = sizeof(testTrans);
 
+  for (integer j = 1; j <= ATRLENGTH; j++) {
+    transaction tempTrans[];
+    for (integer i = 1; i <= EMALEN; i++) {
+      tempTrans >> testTrans[testTransLength - 1 - ATRLENGTH - EMALEN + i + j];
+    }
+    bar tempBar = generateBar(tempTrans);
+    atrBars >> tempBar;
+  }
+
+
+
 
   print("Preparing Bars in Period...");
-  bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, EMALEN, resolution * 60 * 1000 * 1000);
-  integer barSize = sizeof(barsInPeriod);
+  bar atrBars[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, EMALEN, resolution * 60 * 1000 * 1000);
+  integer barSize = sizeof(atrBars);
 
   for (integer i = 0; i < barSize; i++) {
-    emaPrices >> barsInPeriod[i].closePrice;
+    emaPrices >> atrBars[i].closePrice;
   }
 
   setCurrentChartsExchange(EXCHANGESETTING);
@@ -543,9 +555,6 @@ float backtest() {
   setCurrentSeriesName("Lower");
   configureLine(true, "#fd4700", 2.0);  
 
-  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
-  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
-
   order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
   order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
 
@@ -565,7 +574,7 @@ float backtest() {
   currentOrderId = 0;
 
   ema = EMA(emaPrices, EMALEN);
-  atr = ATR(barsInPeriod[barSize-2], barsInPeriod[barSize-1]);
+  atr = ATR(atrBars[barSize-2], atrBars[barSize-1]);
   upperBand = ema + ATRMULTIPLIER * atr;
   lowerBand = ema - ATRMULTIPLIER * atr;
 
@@ -574,7 +583,7 @@ float backtest() {
   print("Initial keltnerUpperBand :" + toString(upperBand));
   print("Initial keltnerLowerBand :" + toString(lowerBand));
 
-  lastBar = barsInPeriod[barSize-1];
+  lastBar = atrBars[barSize-1];
 
   print("--------------   Running   -------------------");
 
