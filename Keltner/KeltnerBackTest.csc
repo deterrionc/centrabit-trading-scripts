@@ -463,7 +463,7 @@ void onTimeOutTest() {
 float backtest() {
   initCommonParameters();
 
-  print("^^^^^^^^^^^^^^^^^ Keltner Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^^^^^^^^^");
+  print("^^^^^^^^ Keltner Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^\n");
   print("");
 
   # Connection Checking
@@ -513,7 +513,6 @@ float backtest() {
   setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
   setChartTime(testTrans[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
   setChartDataTitle("Keltner - " + toString(EMALEN) + ", " + toString(ATRMULTIPLIER));
-
   setCurrentSeriesName("Sell");
   configureScatter(true, "red", "red", 7.0);
   setCurrentSeriesName("Buy");
