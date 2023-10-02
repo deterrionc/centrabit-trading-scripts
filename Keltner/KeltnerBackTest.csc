@@ -18,11 +18,11 @@ import "library.csh";
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 integer EMALEN          = 20;                     # EMA period length
-float   ATRMULTIPLIER   = 2.0;                    # ATR multiplier
+float   ATRMULTIPLIER   = 0.5;                    # ATR multiplier
 integer ATRLENGTH       = 14;                     # ATR period length (must be over than 3)
 string  RESOL           = "30m";                  # Bar resolution
 float   AMOUNT          = 1.0;                    # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-06-14 00:00:00";  # Backtest start datetime
+string  STARTDATETIME   = "2023-09-22 00:00:00";  # Backtest start datetime
 string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                   # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;                  # Trailing stop flag
@@ -67,10 +67,10 @@ float   maxFillOrderPercentage  = 0.0;
 string  profitSeriesColor       = "green";
 string  tradeSign               = "";
 integer profitSeriesID          = 0;
-bar     lastBar;
 transaction transactions[];
 transaction currentTran;
 transaction entryTran;
+bar     atrBars[];
 
 void initCommonParameters() {
   if (toBoolean(getVariable("EXCHANGE"))) 
@@ -111,6 +111,13 @@ void updateKeltnerParams(transaction t) {
 }
 
 void onOwnOrderFilledTest(transaction t) {
+  # print("Transactions: " + toString(sizeof(transactions)));
+  # print("EMA Prices: " + toString(sizeof(emaPrices)));
+  # print("ATR Bars: " + toString(sizeof(atrBars)));
+  # print("EMA: " + toString(ema));
+  # print("ATR: " + toString(atr));
+  # print("Upper Band: " + toString(upperBand));
+  # print("Lower Band: " + toString(lowerBand));
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
@@ -288,6 +295,8 @@ void onPubOrderFilledTest(transaction t) {
   transactions >> t;
   currentTran = t;
 
+  # updateKeltnerParams(t);
+
   drawChartPointToSeries("Middle", t.tradeTime, ema);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
@@ -297,10 +306,8 @@ void onPubOrderFilledTest(transaction t) {
   }
  
   stopLossFlag = stopLossTick(t.price);
-
   if (stopLossFlag) {
     currentOrderId++;
-
     if (position == "long") {     # Bought -> Sell
       printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       buyStopped = true;
@@ -314,14 +321,11 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = false;
       onOwnOrderFilledTest(filledTransaction);
-
       position = "flat";
       prevPosition = "long";
-
       sellCount++;
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
     }
-
     if (position == "short") {        # Sold -> Buy
       print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
       sellStopped = true;
@@ -335,17 +339,13 @@ void onPubOrderFilledTest(transaction t) {
       filledTransaction.tradeTime = t.tradeTime;
       filledTransaction.isAsk = true;
       onOwnOrderFilledTest(filledTransaction);
-
       position = "flat";
       prevPosition = "short";
-
       buyCount++;
       drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
-
     stopLossFlag = false;
   }
-
   if (t.price > upperBand) {      # Sell Signal
     if (buyStopped) {  # Release buy stop when sell signal
       buyStopped = false;
@@ -361,7 +361,6 @@ void onPubOrderFilledTest(transaction t) {
           sellSignal = true;
         }
       }
-
       if (sellSignal) {
         currentOrderId++;
         if (currentOrderId == 1) {
@@ -369,7 +368,6 @@ void onPubOrderFilledTest(transaction t) {
         } else {
           printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
         }
-
         # Emulate Sell Order
         transaction filledTransaction;
         filledTransaction.id = currentOrderId;
@@ -385,7 +383,6 @@ void onPubOrderFilledTest(transaction t) {
         filledTransaction.tradeTime = t.tradeTime;
         filledTransaction.isAsk = false;
         onOwnOrderFilledTest(filledTransaction);
-
         if (position == "flat") {
           if (prevPosition == "") {
             prevPosition = "short";
@@ -396,7 +393,6 @@ void onPubOrderFilledTest(transaction t) {
           position = "flat";
           prevPosition = "long";
         }
-
         sellCount++;
         drawChartPointToSeries("Sell", t.tradeTime, t.price);
       }
@@ -462,20 +458,20 @@ void onPubOrderFilledTest(transaction t) {
 }
 
 void onTimeOutTest() {
-  if (sizeof(transactions) == 0) {
-    return;
-  }
-  bar curBar = generateBar(transactions);
-  emaPrices >> curBar.closePrice;
-  delete emaPrices[0];
-
-  ema = EMA(emaPrices, EMALEN);
-  atr = ATR(lastBar, curBar);
-  upperBand = ema + ATRMULTIPLIER * atr;
-  lowerBand = ema - ATRMULTIPLIER * atr;
-
-  lastBar = curBar;
-  delete transactions;
+  # if (sizeof(transactions) == 0) {
+  #   return;
+  # }
+  # bar curBar = generateBar(transactions);
+  # emaPrices >> curBar.closePrice;
+  # delete emaPrices[0];
+  # 
+  # ema = EMA(emaPrices, EMALEN);
+  # atr = ATR(lastBar, curBar);
+  # upperBand = ema + ATRMULTIPLIER * atr;
+  # lowerBand = ema - ATRMULTIPLIER * atr;
+  # 
+  # lastBar = curBar;
+  # delete transactions;
 }
 
 float backtest() {
@@ -513,27 +509,28 @@ float backtest() {
 
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
   transaction testTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
+  print(sizeof(testTrans));
   integer testTransLength = sizeof(testTrans);
 
-  for (integer j = 1; j <= ATRLENGTH; j++) {
+  for (integer i = 0; i < ATRLENGTH; i++) {
     transaction tempTrans[];
-    for (integer i = 1; i <= EMALEN; i++) {
-      tempTrans >> testTrans[testTransLength - 1 - ATRLENGTH - EMALEN + i + j];
+    for (integer j = i; j < (i + EMALEN); j++) {
+      tempTrans >> testTrans[j];
     }
     bar tempBar = generateBar(tempTrans);
     atrBars >> tempBar;
   }
 
-
-
-
-  print("Preparing Bars in Period...");
-  bar atrBars[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, EMALEN, resolution * 60 * 1000 * 1000);
-  integer barSize = sizeof(atrBars);
-
-  for (integer i = 0; i < barSize; i++) {
-    emaPrices >> atrBars[i].closePrice;
+  for (integer i = 0; i < EMALEN; i++) {
+    transaction tempTran = testTrans[ATRLENGTH + i];
+    transactions >> tempTran;
+    emaPrices >> tempTran.price;
   }
+
+  ema = EMA(emaPrices, EMALEN);
+  atr = ATR(atrBars);
+  upperBand = ema + ATRMULTIPLIER * atr;
+  lowerBand = ema - ATRMULTIPLIER * atr;
 
   setCurrentChartsExchange(EXCHANGESETTING);
   setCurrentChartsSymbol(SYMBOLSETTING);
@@ -573,18 +570,10 @@ float backtest() {
 
   currentOrderId = 0;
 
-  ema = EMA(emaPrices, EMALEN);
-  atr = ATR(atrBars[barSize-2], atrBars[barSize-1]);
-  upperBand = ema + ATRMULTIPLIER * atr;
-  lowerBand = ema - ATRMULTIPLIER * atr;
-
   print("Initial EMA :" + toString(ema));
   print("Initial ATR :" + toString(atr));
   print("Initial keltnerUpperBand :" + toString(upperBand));
   print("Initial keltnerLowerBand :" + toString(lowerBand));
-
-  lastBar = atrBars[barSize-1];
-
   print("--------------   Running   -------------------");
 
   integer cnt = sizeof(testTrans);
@@ -599,19 +588,19 @@ float backtest() {
 
   setChartsPairBuffering(true);
 
-  for (integer i = 0; i < cnt; i++) {
+  for (integer i = ATRLENGTH; i < cnt; i++) {
     onPubOrderFilledTest(testTrans[i]);
     if (testTrans[i].tradeTime < timestampToStartLast24Hours) {
       updateTicker = i % step;
-      if (updateTicker ==0 && i != 0) {
-        onTimeOutTest();
+      if (updateTicker == 0 && i != 0) {
+        updateKeltnerParams(testTrans[i]);
         lastUpdatedTimestamp = testTrans[i].tradeTime;
       } 
       updateTicker ++;     
     } else {
         timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
         if (timecounter > (resolution * 60 * 1000 * 1000)) {
-          onTimeOutTest();
+          # updateKeltnerParams(testTrans[i]);
           lastUpdatedTimestamp = testTrans[i].tradeTime;         
         }
     }
@@ -648,9 +637,9 @@ float backtest() {
       }
     }
 
-    msleepFlag = i % 2000;
+    msleepFlag = i % 1000;
     if ( msleepFlag == 0) {
-      msleep(20);    
+      msleep(20); 
     }
   }
 
