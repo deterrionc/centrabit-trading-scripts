@@ -28,16 +28,19 @@ float   STOPLOSSAT      = 0.05;                             # Stoploss as fracti
 float   EXPECTANCYBASE  = 0.1;                              # expectancy base
 float   FEE             = 0.002;                            # taker fee in percentage
 boolean USETRAILINGSTOP = false;                            # Trailing stop flag
+string  logFilePath     = "c:/bbtest_log_tradelist_";       # Please make sure this path any drive except C:
 #############################################
 
-# Trading Variables
-string  logFilePath     = "c:/bbtest_log_tradelist_";       # Please make sure this path any drive except C:
-string  position        = "flat";
-string  prevPosition    = "";    # "", "long", "short"
-float   sma             = 100.0;
+# BollingerBands Variables
+float   sma             = 0.0;
+float   stddev          = 0.0;
 float   upperBand       = 0.0;
 float   lowerBand       = 0.0;
-float   stddev          = 0.0;
+
+# Trading Variables
+string  position        = "flat";
+string  prevPosition    = "";    # "", "long", "short"
+integer resolution      = interpretResol(RESOL);
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
@@ -461,17 +464,7 @@ void onTimeOutTest() {
 void backtest() {
   initCommonParameters();
 
-  print("^^^^^^^^^^^^^^^^^ BollingerBands Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^^^^^^^^^");
-  print("");
-  # Connection Checking
-  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
-  integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
-  
-  if (sizeof(conTestTrans) == 0) {
-    print("Fetching Data failed. Please check the connection and try again later");
-    exit;
-  }
+  print("^^^^^^^^^ BollingerBands Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^\n");
 
   # Fetching the historical trading data of given datatime period
   integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
@@ -501,9 +494,6 @@ void backtest() {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
   }
-  print(sizeof(transForTest));
-
-  integer resolution = interpretResol(RESOL);
 
   print("Preparing Bars in Period...");
   bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SMALEN, resolution * 60 * 1000 * 1000);
@@ -517,9 +507,7 @@ void backtest() {
   setChartBarCount(10);
   setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
   setChartTime(transForTest[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
-
   setChartDataTitle("BollingerBands - " + toString(SMALEN) + ", " + toString(STDDEVSETTING));
-
   setCurrentSeriesName("Sell");
   configureScatter(true, "red", "red", 7.0);
   setCurrentSeriesName("Buy");
@@ -531,52 +519,29 @@ void backtest() {
   setCurrentSeriesName("Lower");
   configureLine(true, "#fd4700", 2.0);  
 
-  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
-  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
-
-  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-
-  minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
-  maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;
-  if (AMOUNT < 10.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.999;
-  } else if (AMOUNT <100.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.998;
-  } else if (AMOUNT < 1000.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  } else {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  }
-
-  currentOrderId = 0;
-
   sma = SMA(barPricesInSMAPeriod);
   stddev = STDDEV(barPricesInSMAPeriod, sma);
   upperBand = bollingerUpperBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
   lowerBand = bollingerLowerBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
+  lastPrice = barsInPeriod[sizeof(barsInPeriod)-1].closePrice;
 
   print("Initial SMA :" + toString(sma));
   print("Initial bollingerSTDDEV :" + toString(stddev));
   print("Initial bollingerUpperBand :" + toString(upperBand));
   print("Initial bollingerLowerBand :" + toString(lowerBand));
-
-  lastPrice = barsInPeriod[sizeof(barsInPeriod)-1].closePrice;
-
   print("--------------   Running   -------------------");
 
   integer cnt = sizeof(transForTest);
   integer step = resolution * 2;
   integer updateTicker = 0;
   integer msleepFlag = 0;
-
-
   integer timestampToStartLast24Hours = currentTime - 86400000000;  # 86400000000 = 24 * 3600 * 1000 * 1000
   integer lastUpdatedTimestamp = transForTest[0].tradeTime;
-
   integer timecounter = 0;
 
   setChartsPairBuffering(true);
+
+  currentOrderId = 0;
 
   for (integer i = 0; i < cnt; i++) {
     onPubOrderFilledTest(transForTest[i]);
@@ -651,14 +616,11 @@ void backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  print(" ");
-
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
 
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("\n\n----------------------------------------------------------------------------------------");
   print(tradeListTitle);
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("----------------------------------------------------------------------------------------");
 
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
@@ -674,8 +636,7 @@ void backtest() {
   }
   fclose(logFile);
 
-  print(" ");
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("\n----------------------------------------------------------------------------------------");
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
@@ -684,7 +645,6 @@ void backtest() {
   print("@ Expectancy Base: " + toString(EXPECTANCYBASE));
   print(" ");
   print("Result : " + resultString);
-
   print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
   print("*****************************");
 
