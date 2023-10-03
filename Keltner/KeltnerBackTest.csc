@@ -592,13 +592,13 @@ float backtest() {
 
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
 
-  print("\n\n---------------------------------------------------------------------------------");
+  print("\n\n-----------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
-  print("---------------------------------------------------------------------------------");
+  print("-----------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
-  print("---------------------------------------------------------------------------------\n");
+  print("-----------------------------------------------------------------------------------------------------------------------\n");
 
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
