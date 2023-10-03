@@ -539,7 +539,7 @@ float backtest() {
         transaction t;
         currentOrderId++;
         if (prevPosition == "long") { # sell order emulation
-          print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Sell", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id        = currentOrderId;
           t.marker    = currentOrderId;
           t.price     = transForTest[i].price;
@@ -551,7 +551,7 @@ float backtest() {
           sellCount ++;
           drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else { # buy order emulation
-          print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id        = currentOrderId;
           t.marker    = currentOrderId;
           t.price     = transForTest[i].price;
@@ -590,19 +590,16 @@ float backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  print(" ");
-
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
 
-  print("---------------------------------------------------------------------------------");
+  print("\n\n---------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("---------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
-  print(" ");
-  print("---------------------------------------------------------------------------------");
+  print("---------------------------------------------------------------------------------\n");
+
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));

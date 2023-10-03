@@ -36,6 +36,7 @@ float   sma             = 0.0;
 float   stddev          = 0.0;
 float   upperBand       = 0.0;
 float   lowerBand       = 0.0;
+float   smaPrices[];
 
 # Trading Variables
 string  position        = "flat";
@@ -55,7 +56,6 @@ float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 float   lastPrice       = 0.0;
 string  tradeLogList[];
-float   barPricesInSMAPeriod[];
 float   baseCurrencyBalance;
 float   quoteCurrencyBalance;
 
@@ -67,8 +67,6 @@ boolean buyStopped            = false;
 boolean sellStopped           = false;
 
 # Additional needs in backtest mode
-float   minFillOrderPercentage  = 0.0;
-float   maxFillOrderPercentage  = 0.0;
 integer profitSeriesID          = 0;
 string  profitSeriesColor       = "green";
 string  tradeSign               = "";
@@ -296,7 +294,7 @@ void onPubOrderFilledTest(transaction t) {
       transaction filledTran;
       filledTran.id = currentOrderId;
       filledTran.marker = currentOrderId;
-      filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+      filledTran.price = t.price;
       filledTran.amount = AMOUNT;
       filledTran.fee = AMOUNT * t.price * FEE;
       filledTran.tradeTime = t.tradeTime;
@@ -318,7 +316,7 @@ void onPubOrderFilledTest(transaction t) {
       transaction filledTran;
       filledTran.id = currentOrderId;
       filledTran.marker = currentOrderId;
-      filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+      filledTran.price = t.price;
       filledTran.amount = AMOUNT;
       filledTran.fee = AMOUNT * t.price * FEE;
       filledTran.tradeTime = t.tradeTime;
@@ -364,7 +362,7 @@ void onPubOrderFilledTest(transaction t) {
         transaction filledTran;
         filledTran.id = currentOrderId;
         filledTran.marker = currentOrderId;
-        filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+        filledTran.price = t.price;
         if (currentOrderId == 1) {
           filledTran.amount = AMOUNT;
           filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
@@ -421,7 +419,7 @@ void onPubOrderFilledTest(transaction t) {
         transaction filledTran;
         filledTran.id = currentOrderId;
         filledTran.marker = currentOrderId;
-        filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+        filledTran.price = t.price;
         if (currentOrderId == 1) {
           filledTran.amount = AMOUNT;
           filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
@@ -452,13 +450,13 @@ void onPubOrderFilledTest(transaction t) {
 }
 
 void onTimeOutTest() {
-  barPricesInSMAPeriod >> lastPrice;
-  delete barPricesInSMAPeriod[0];
+  smaPrices >> lastPrice;
+  delete smaPrices[0];
 
-  sma = SMA(barPricesInSMAPeriod);
-  stddev = STDDEV(barPricesInSMAPeriod, sma);
-  upperBand = bollingerUpperBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
-  lowerBand = bollingerLowerBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
+  sma = SMA(smaPrices);
+  stddev = STDDEV(smaPrices, sma);
+  upperBand = bollingerUpperBand(smaPrices, sma, stddev, STDDEVSETTING);
+  lowerBand = bollingerLowerBand(smaPrices, sma, stddev, STDDEVSETTING);
 }
 
 void backtest() {
@@ -498,7 +496,7 @@ void backtest() {
   print("Preparing Bars in Period...");
   bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SMALEN, resolution * 60 * 1000 * 1000);
   for (integer i=0; i<sizeof(barsInPeriod); i++) {
-    barPricesInSMAPeriod >> barsInPeriod[i].closePrice;
+    smaPrices >> barsInPeriod[i].closePrice;
   }
 
   setCurrentChartsExchange(EXCHANGESETTING);
@@ -519,10 +517,10 @@ void backtest() {
   setCurrentSeriesName("Lower");
   configureLine(true, "#fd4700", 2.0);  
 
-  sma = SMA(barPricesInSMAPeriod);
-  stddev = STDDEV(barPricesInSMAPeriod, sma);
-  upperBand = bollingerUpperBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
-  lowerBand = bollingerLowerBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
+  sma = SMA(smaPrices);
+  stddev = STDDEV(smaPrices, sma);
+  upperBand = bollingerUpperBand(smaPrices, sma, stddev, STDDEVSETTING);
+  lowerBand = bollingerLowerBand(smaPrices, sma, stddev, STDDEVSETTING);
   lastPrice = barsInPeriod[sizeof(barsInPeriod)-1].closePrice;
 
   print("Initial SMA :" + toString(sma));
@@ -564,11 +562,11 @@ void backtest() {
       if (sellCount != buyCount) {
         transaction t;
         currentOrderId++;
-        if (prevPosition == "long") {                 # sell order emulation
-          print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+        if (prevPosition == "long") {
+          printOrderLogs(currentOrderId, "Sell", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE;
           t.tradeTime = transForTest[i].tradeTime;
@@ -576,11 +574,11 @@ void backtest() {
           onOwnOrderFilledTest(t);
           sellCount++;
           drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
-        } else {                                      # buy order emulation
-          print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+        } else {
+          printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price + transForTest[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE;
           t.tradeTime = transForTest[i].tradeTime;
@@ -636,7 +634,7 @@ void backtest() {
   }
   fclose(logFile);
 
-  print("\n----------------------------------------------------------------------------------------");
+  print("----------------------------------------------------------------------------------------\n");
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
