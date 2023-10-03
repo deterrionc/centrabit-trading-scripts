@@ -1,4 +1,4 @@
-# Bollinger Bands trading strategy backtest 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# Bollinger Bands trading strategy backtest 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # Script Name
 script BollingerBandsOptimizationTest;
@@ -46,7 +46,7 @@ float   upperBand       = 0.0;
 float   lowerBand       = 0.0;
 float stddev = 0.0;
 
-transaction testTrans[];
+transaction transForTest[];
 float barPricesInSMAPeriod[];
 
 integer currentOrderId  = 0;
@@ -408,13 +408,13 @@ float backtest() {
 
   lastPrice = barsInPeriod[sizeof(barsInPeriod)-1].closePrice;
 
-  integer cnt = sizeof(testTrans);
+  integer cnt = sizeof(transForTest);
   integer step = resolution * 2;
   integer updateTicker = 0;
   integer msleepFlag = 0;
 
   integer timestampToStartLast24Hours = currentTime - 86400000000;  # 86400000000 = 24 * 3600 * 1000 * 1000
-  integer lastUpdatedTimestamp = testTrans[0].tradeTime;
+  integer lastUpdatedTimestamp = transForTest[0].tradeTime;
 
   integer timecounter = 0;
 
@@ -426,7 +426,7 @@ float backtest() {
   if (drawable == true) {
     setChartBarCount(10);
     setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
-    setChartTime(testTrans[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
+    setChartTime(transForTest[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
 
     setChartDataTitle("BollingerBands - " + toString(SMALEN) + ", " + toString(STDDEVSETTING));
 
@@ -447,19 +447,19 @@ float backtest() {
   }
 
   for (integer i = 0; i < cnt; i++) {
-    onPubOrderFilledTest(testTrans[i]);
-    if (testTrans[i].tradeTime < timestampToStartLast24Hours) {
+    onPubOrderFilledTest(transForTest[i]);
+    if (transForTest[i].tradeTime < timestampToStartLast24Hours) {
       updateTicker = i % step;
       if (updateTicker ==0) {
         onTimedOutTest();
-        lastUpdatedTimestamp = testTrans[i].tradeTime;
+        lastUpdatedTimestamp = transForTest[i].tradeTime;
       }      
       updateTicker ++;     
     } else {
-        timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
+        timecounter = transForTest[i].tradeTime - lastUpdatedTimestamp;
         if (timecounter > (resolution * 60 * 1000 * 1000)) {
           onTimedOutTest();
-          lastUpdatedTimestamp = testTrans[i].tradeTime;         
+          lastUpdatedTimestamp = transForTest[i].tradeTime;         
         }
     }
 
@@ -469,47 +469,47 @@ float backtest() {
         currentOrderId++;
         if (prevPosition == "long") { # sell order emulation
           if (drawable == true)
-            print(toString(currentOrderId) + " sell order (" + timeToString(testTrans[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(testTrans[i].price) + "  amount: "+ toString(AMOUNT));
+            print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+          t.price = transForTest[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
-          t.tradeTime = testTrans[i].tradeTime;
+          t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
           sellCount ++;
           if (drawable == true) {
-            drawChartPointToSeries("Sell", testTrans[i].tradeTime, testTrans[i].price);
-            drawChartPointToSeries("Direction", testTrans[i].tradeTime, testTrans[i].price);             
+            drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
+            drawChartPointToSeries("Direction", transForTest[i].tradeTime, transForTest[i].price);             
           }
         } else { # buy order emulation
           if (drawable == true)
-            print(toString(currentOrderId) + " buy order (" + timeToString(testTrans[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(testTrans[i].price) + "  amount: "+ toString(AMOUNT));
+            print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+          t.price = transForTest[i].price + transForTest[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
-          t.tradeTime = testTrans[i].tradeTime;
+          t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
           buyCount ++;
           if (drawable == true) {
-            drawChartPointToSeries("Buy", testTrans[i].tradeTime, testTrans[i].price);
-            drawChartPointToSeries("Direction", testTrans[i].tradeTime, testTrans[i].price);             
+            drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
+            drawChartPointToSeries("Direction", transForTest[i].tradeTime, transForTest[i].price);             
           }
         }
       }
     }
-    # delete testTrans[0];
+    # delete transForTest[0];
     msleepFlag = i % 2000;
     if ( msleepFlag == 0) {
       msleep(20);
     }
   }
 
-  # delete testTrans;
+  # delete transForTest;
 
   if (drawable == true)
     setChartsPairBuffering(false);
@@ -622,7 +622,7 @@ string optimization() {
     return;
   }
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
-  testTrans = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
+  transForTest = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
 
   for (integer i = SMALENSTART; i <= SMALENEND; i += SMALENSTEP) {
     for (float j = STDDEVSTART; j <= STDDEVEND; j += STDDEVSTEP ) {

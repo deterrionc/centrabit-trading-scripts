@@ -21,7 +21,7 @@ import "library.csh";
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 integer EMALEN          = 20;                            # EMA period length
-float   ATRMULTIPLIER   = 2.0;                           # ATR multiplier
+float   ATRMULTIPLIER   = 0.3;                           # ATR multiplier
 integer ATRLENGTH       = 14;                            # ATR period length (must be over than 3)
 string  RESOL           = "1m";                          # Bar resolution
 float   AMOUNT          = 1.0;                           # The amount of buy or sell order at once

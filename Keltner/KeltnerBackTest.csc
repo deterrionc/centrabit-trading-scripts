@@ -1,4 +1,4 @@
-# Keltner trading strategy backtest 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# Keltner trading strategy backtest 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # Script Name
 script KeltnerBackTest;
@@ -22,7 +22,7 @@ float   ATRMULTIPLIER   = 0.5;                    # ATR multiplier
 integer ATRLENGTH       = 14;                     # ATR period length (must be over than 3)
 string  RESOL           = "30m";                  # Bar resolution
 float   AMOUNT          = 1.0;                    # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-09-22 00:00:00";  # Backtest start datetime
+string  STARTDATETIME   = "2023-07-02 00:00:00";  # Backtest start datetime
 string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                   # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;                  # Trailing stop flag
@@ -30,13 +30,17 @@ float   EXPECTANCYBASE  = 0.1;                    # expectancy base
 float   FEE             = 0.002;                  # taker fee in percentage
 #############################################
 
+# Keltner Variables
+float   ema             = 0.0;
+float   atr             = 0.0;
+float   upperBand       = 0.0;
+float   lowerBand       = 0.0;
+float   emaPrices[];
+bar     atrBars[];
+
 # Trading Variables
 string  position        = "flat";
 string  prevPosition    = "";                     # "", "long", "short"
-float   ema             = 100.0;
-float   upperBand       = 0.0;
-float   lowerBand       = 0.0;
-float   atr             = 0.0;
 integer resolution      = interpretResol(RESOL);
 integer currentOrderId  = 0;
 integer buyCount        = 0;
@@ -50,10 +54,7 @@ float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-float   emaPrices[];
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 # Stop-loss and trailing stop info
 boolean stopLossFlag            = false;
@@ -62,15 +63,12 @@ boolean sellStopped             = false;
 float   lockedPriceForProfit    = 0.0;
 
 # Additional needs in backtest mode
-float   minFillOrderPercentage  = 0.0;
-float   maxFillOrderPercentage  = 0.0;
 string  profitSeriesColor       = "green";
 string  tradeSign               = "";
 integer profitSeriesID          = 0;
 transaction transactions[];
 transaction currentTran;
 transaction entryTran;
-bar     atrBars[];
 
 void initCommonParameters() {
   if (toBoolean(getVariable("EXCHANGE"))) 
@@ -111,24 +109,13 @@ void updateKeltnerParams(transaction t) {
 }
 
 void onOwnOrderFilledTest(transaction t) {
-  # print("Transactions: " + toString(sizeof(transactions)));
-  # print("EMA Prices: " + toString(sizeof(emaPrices)));
-  # print("ATR Bars: " + toString(sizeof(atrBars)));
-  # print("EMA: " + toString(ema));
-  # print("ATR: " + toString(atr));
-  # print("Upper Band: " + toString(upperBand));
-  # print("Lower Band: " + toString(lowerBand));
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
   if (t.isAsk == false) {                   # when sell order fillend
     sellTotal += amount;
-    baseCurrencyBalance -= AMOUNT;
-    quoteCurrencyBalance += amount;
   } else {                                  # when buy order filled
     buyTotal += amount;
-    baseCurrencyBalance += AMOUNT;
-    quoteCurrencyBalance -= amount;
   }
 
   integer isOddOrder = t.marker % 2;
@@ -292,10 +279,7 @@ boolean trailingStopTick(float price) {
 }
 
 void onPubOrderFilledTest(transaction t) {
-  transactions >> t;
   currentTran = t;
-
-  # updateKeltnerParams(t);
 
   drawChartPointToSeries("Middle", t.tradeTime, ema);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
@@ -312,15 +296,15 @@ void onPubOrderFilledTest(transaction t) {
       printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       buyStopped = true;
       # Emulate Sell Order
-      transaction filledTransaction;
-      filledTransaction.id = currentOrderId;
-      filledTransaction.marker = currentOrderId;
-      filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE;
-      filledTransaction.tradeTime = t.tradeTime;
-      filledTransaction.isAsk = false;
-      onOwnOrderFilledTest(filledTransaction);
+      transaction filledTran;
+      filledTran.id = currentOrderId;
+      filledTran.marker = currentOrderId;
+      filledTran.price = t.price;
+      filledTran.amount = AMOUNT;
+      filledTran.fee = AMOUNT * t.price * FEE;
+      filledTran.tradeTime = t.tradeTime;
+      filledTran.isAsk = false;
+      onOwnOrderFilledTest(filledTran);
       position = "flat";
       prevPosition = "long";
       sellCount++;
@@ -330,15 +314,15 @@ void onPubOrderFilledTest(transaction t) {
       print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
       sellStopped = true;
       # Emulate Buy Order
-      transaction filledTransaction;
-      filledTransaction.id = currentOrderId;
-      filledTransaction.marker = currentOrderId;
-      filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE;
-      filledTransaction.tradeTime = t.tradeTime;
-      filledTransaction.isAsk = true;
-      onOwnOrderFilledTest(filledTransaction);
+      transaction filledTran;
+      filledTran.id = currentOrderId;
+      filledTran.marker = currentOrderId;
+      filledTran.price = t.price;
+      filledTran.amount = AMOUNT;
+      filledTran.fee = AMOUNT * t.price * FEE;
+      filledTran.tradeTime = t.tradeTime;
+      filledTran.isAsk = true;
+      onOwnOrderFilledTest(filledTran);
       position = "flat";
       prevPosition = "short";
       buyCount++;
@@ -369,20 +353,20 @@ void onPubOrderFilledTest(transaction t) {
           printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
         }
         # Emulate Sell Order
-        transaction filledTransaction;
-        filledTransaction.id = currentOrderId;
-        filledTransaction.marker = currentOrderId;
-        filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+        transaction filledTran;
+        filledTran.id = currentOrderId;
+        filledTran.marker = currentOrderId;
+        filledTran.price = t.price;
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
+          filledTran.amount = AMOUNT / 2.0;
+          filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
         } else {
-          filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE;
+          filledTran.amount = AMOUNT;
+          filledTran.fee = AMOUNT * t.price * FEE;
         }
-        filledTransaction.tradeTime = t.tradeTime;
-        filledTransaction.isAsk = false;
-        onOwnOrderFilledTest(filledTransaction);
+        filledTran.tradeTime = t.tradeTime;
+        filledTran.isAsk = false;
+        onOwnOrderFilledTest(filledTran);
         if (position == "flat") {
           if (prevPosition == "") {
             prevPosition = "short";
@@ -424,20 +408,20 @@ void onPubOrderFilledTest(transaction t) {
         }
     
         # emulating buy order filling
-        transaction filledTransaction;
-        filledTransaction.id = currentOrderId;
-        filledTransaction.marker = currentOrderId;
-        filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+        transaction filledTran;
+        filledTran.id = currentOrderId;
+        filledTran.marker = currentOrderId;
+        filledTran.price = t.price;
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT / 2.0;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
+          filledTran.amount = AMOUNT / 2.0;
+          filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
         } else {
-          filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE;
+          filledTran.amount = AMOUNT;
+          filledTran.fee = AMOUNT * t.price * FEE;
         }
-        filledTransaction.tradeTime = t.tradeTime;
-        filledTransaction.isAsk = true;
-        onOwnOrderFilledTest(filledTransaction);
+        filledTran.tradeTime = t.tradeTime;
+        filledTran.isAsk = true;
+        onOwnOrderFilledTest(filledTran);
 
         if (position == "flat") {
           if (prevPosition == "") {
@@ -457,37 +441,9 @@ void onPubOrderFilledTest(transaction t) {
   }
 }
 
-void onTimeOutTest() {
-  # if (sizeof(transactions) == 0) {
-  #   return;
-  # }
-  # bar curBar = generateBar(transactions);
-  # emaPrices >> curBar.closePrice;
-  # delete emaPrices[0];
-  # 
-  # ema = EMA(emaPrices, EMALEN);
-  # atr = ATR(lastBar, curBar);
-  # upperBand = ema + ATRMULTIPLIER * atr;
-  # lowerBand = ema - ATRMULTIPLIER * atr;
-  # 
-  # lastBar = curBar;
-  # delete transactions;
-}
-
 float backtest() {
   initCommonParameters();
-
   print("^^^^^^^^ Keltner Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^\n");
-  print("");
-
-  # Connection Checking
-  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
-  integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
-  if (sizeof(conTestTrans) == 0) {
-    print("Fetching Data failed. Please check the connection and try again later");
-    exit;
-  }
 
   # Fetching the historical trading data of given datatime period
   integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
@@ -508,21 +464,20 @@ float backtest() {
   }
 
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
-  transaction testTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
-  print(sizeof(testTrans));
-  integer testTransLength = sizeof(testTrans);
+  transaction transForTest[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
+  integer transForTestLength = sizeof(transForTest);
 
   for (integer i = 0; i < ATRLENGTH; i++) {
     transaction tempTrans[];
     for (integer j = i; j < (i + EMALEN); j++) {
-      tempTrans >> testTrans[j];
+      tempTrans >> transForTest[j];
     }
     bar tempBar = generateBar(tempTrans);
     atrBars >> tempBar;
   }
 
   for (integer i = 0; i < EMALEN; i++) {
-    transaction tempTran = testTrans[ATRLENGTH + i];
+    transaction tempTran = transForTest[ATRLENGTH + i];
     transactions >> tempTran;
     emaPrices >> tempTran.price;
   }
@@ -537,7 +492,7 @@ float backtest() {
   clearCharts();
   setChartBarCount(10);
   setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
-  setChartTime(testTrans[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
+  setChartTime(transForTest[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
   setChartDataTitle("Keltner - " + toString(EMALEN) + ", " + toString(ATRMULTIPLIER));
   setCurrentSeriesName("Sell");
   configureScatter(true, "red", "red", 7.0);
@@ -552,57 +507,31 @@ float backtest() {
   setCurrentSeriesName("Lower");
   configureLine(true, "#fd4700", 2.0);  
 
-  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-
-
-  minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
-  maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;
-  if (AMOUNT < 10.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.999;
-  } else if (AMOUNT <100.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.998;
-  } else if (AMOUNT < 1000.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  } else {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  }
-
-  currentOrderId = 0;
-
   print("Initial EMA :" + toString(ema));
   print("Initial ATR :" + toString(atr));
   print("Initial keltnerUpperBand :" + toString(upperBand));
   print("Initial keltnerLowerBand :" + toString(lowerBand));
   print("--------------   Running   -------------------");
 
-  integer cnt = sizeof(testTrans);
+  integer cnt = sizeof(transForTest);
   integer step = resolution * 2;
   integer updateTicker = 0;
   integer msleepFlag = 0;
-
   integer timestampToStartLast24Hours = currentTime - 86400000000;  # 86400000000 = 24 * 3600 * 1000 * 1000
-  integer lastUpdatedTimestamp = testTrans[0].tradeTime;
-
   integer timecounter = 0;  
 
   setChartsPairBuffering(true);
 
+  currentOrderId = 0;
+
   for (integer i = ATRLENGTH; i < cnt; i++) {
-    onPubOrderFilledTest(testTrans[i]);
-    if (testTrans[i].tradeTime < timestampToStartLast24Hours) {
+    onPubOrderFilledTest(transForTest[i]);
+    if (transForTest[i].tradeTime < timestampToStartLast24Hours) {
       updateTicker = i % step;
       if (updateTicker == 0 && i != 0) {
-        updateKeltnerParams(testTrans[i]);
-        lastUpdatedTimestamp = testTrans[i].tradeTime;
+        updateKeltnerParams(transForTest[i]);
       } 
       updateTicker ++;     
-    } else {
-        timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
-        if (timecounter > (resolution * 60 * 1000 * 1000)) {
-          # updateKeltnerParams(testTrans[i]);
-          lastUpdatedTimestamp = testTrans[i].tradeTime;         
-        }
     }
 
     if (i == (cnt - 1)) {
@@ -610,29 +539,29 @@ float backtest() {
         transaction t;
         currentOrderId++;
         if (prevPosition == "long") { # sell order emulation
-          print(toString(currentOrderId) + " sell order (" + timeToString(testTrans[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(testTrans[i].price) + "  amount: "+ toString(AMOUNT));
-          t.id = currentOrderId;
-          t.marker = currentOrderId;
-          t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-          t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
-          t.tradeTime = testTrans[i].tradeTime;
-          t.isAsk = false;
+          printOrderLogs(currentOrderId, "Sell", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
+          t.id        = currentOrderId;
+          t.marker    = currentOrderId;
+          t.price     = transForTest[i].price;
+          t.amount    = AMOUNT;
+          t.fee       = AMOUNT * t.price * FEE;
+          t.tradeTime = transForTest[i].tradeTime;
+          t.isAsk     = false;
           onOwnOrderFilledTest(t);
           sellCount ++;
-          drawChartPointToSeries("Sell", testTrans[i].tradeTime, testTrans[i].price);
+          drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else { # buy order emulation
-          print(toString(currentOrderId) + " buy order (" + timeToString(testTrans[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(testTrans[i].price) + "  amount: "+ toString(AMOUNT));
-          t.id = currentOrderId;
-          t.marker = currentOrderId;
-          t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-          t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
-          t.tradeTime = testTrans[i].tradeTime;
+          printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
+          t.id        = currentOrderId;
+          t.marker    = currentOrderId;
+          t.price     = transForTest[i].price;
+          t.amount    = AMOUNT;
+          t.fee       = AMOUNT * t.price * FEE;
+          t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
           buyCount ++;
-          drawChartPointToSeries("Buy", testTrans[i].tradeTime, testTrans[i].price);
+          drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
         }
       }
     }
@@ -661,19 +590,16 @@ float backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  print(" ");
-
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
 
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("\n\n---------------------------------------------------------------------------------");
   print(tradeListTitle);
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("---------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
-  print(" ");
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("---------------------------------------------------------------------------------\n");
+
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
@@ -682,7 +608,6 @@ float backtest() {
   print("@ Expectancy Base: " + toString(EXPECTANCYBASE));
   print(" ");
   print("Result : " + resultString);
-
   print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
   print("*****************************");
 
