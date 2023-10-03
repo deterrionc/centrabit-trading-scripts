@@ -1,4 +1,4 @@
-# Bollinger Bands trading strategy backtest 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# Bollinger Bands trading strategy backtest 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # Script Name
 script BollingerBandsBackTest;
@@ -22,7 +22,7 @@ integer SMALEN          = 70;                               # SMA period length
 float   STDDEVSETTING   = 3.0;                              # Standard Deviation
 string  RESOL           = "10m";                            # Bar resolution
 float   AMOUNT          = 1.0;                              # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-06-14 00:00:00";            # Backtest start datetime
+string  STARTDATETIME   = "2023-07-02 00:00:00";            # Backtest start datetime
 string  ENDDATETIME     = "now";                            # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                             # Stoploss as fraction of price
 float   EXPECTANCYBASE  = 0.1;                              # expectancy base

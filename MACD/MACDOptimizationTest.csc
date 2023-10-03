@@ -1,4 +1,4 @@
-# MACD trading strategy optimization test 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# MACD trading strategy optimization test 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # QTScript name definition
 # Script Name

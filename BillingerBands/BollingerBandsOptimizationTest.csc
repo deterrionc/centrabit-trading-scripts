@@ -1,4 +1,4 @@
-# Bollinger Bands trading strategy backtest 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# Bollinger Bands trading strategy backtest 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # Script Name
 script BollingerBandsOptimizationTest;
