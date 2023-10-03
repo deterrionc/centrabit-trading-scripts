@@ -565,23 +565,23 @@ float backtest() {
         currentOrderId++;
         if (prevPosition == "long") { # sell order emulation
           print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
-          t.id = currentOrderId;
-          t.marker = currentOrderId;
-          t.price = transForTest[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-          t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
+          t.id        = currentOrderId;
+          t.marker    = currentOrderId;
+          t.price     = transForTest[i].price;
+          t.amount    = AMOUNT;
+          t.fee       = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
-          t.isAsk = false;
+          t.isAsk     = false;
           onOwnOrderFilledTest(t);
           sellCount ++;
           drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else { # buy order emulation
           print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
-          t.id = currentOrderId;
-          t.marker = currentOrderId;
-          t.price = transForTest[i].price + transForTest[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-          t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
+          t.id        = currentOrderId;
+          t.marker    = currentOrderId;
+          t.price     = transForTest[i].price;
+          t.amount    = AMOUNT;
+          t.fee       = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
