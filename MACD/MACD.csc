@@ -1,6 +1,5 @@
 # Bollinger Bands trading strategy 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
-# QTScript name definition
 # Script Name
 script MACD;
 
@@ -205,33 +204,6 @@ event onPubOrderFilled(string exchange, transaction t) {
   }
 
   setCurrentChartPosition("0");
-
-  # stopLossFlag = toBoolean(getVariable("stopLossFlag"));
-
-  # if (stopLossFlag) {
-  #   currentOrderId++;
-  # 
-  #   if (position == "long") {         # Bought -> SELL
-  #     print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
-  #     sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
-  #     position = "flat";
-  #     prevPosition = "long";
-  #     sellCount ++;
-  #     drawChartPointToSeries("Sell", t.tradeTime, t.price);
-  #   }
-  # 
-  #   if (position == "short") {        # Sold -> Buy
-  #     print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
-  #     buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
-  #     position = "flat";
-  #     prevPosition = "short";
-  #     buyCount ++;
-  #     drawChartPointToSeries("Buy", t.tradeTime, t.price);
-  #   }
-  # 
-  #   stopLossFlag = false;
-  #   stopped = true;
-  # }
 
   float fastK = 2.0/(toFloat(FASTPERIOD)+1.0);
   float slowK = 2.0/(toFloat(SLOWPERIOD)+1.0);

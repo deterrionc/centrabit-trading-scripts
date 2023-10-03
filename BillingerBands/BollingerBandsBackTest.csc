@@ -616,9 +616,9 @@ void backtest() {
 
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
 
-  print("\n\n----------------------------------------------------------------------------------------");
+  print("\n\n-----------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
-  print("----------------------------------------------------------------------------------------");
+  print("-----------------------------------------------------------------------------------------------------------------------");
 
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
@@ -634,15 +634,14 @@ void backtest() {
   }
   fclose(logFile);
 
-  print("----------------------------------------------------------------------------------------\n");
+  print("-----------------------------------------------------------------------------------------------------------------------\n");
   print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
   print("Loss Ratio : " + toString(lossRatio));
   print("Expectancy : " + toString(tharpExpectancy));
   print("@ Expectancy Base: " + toString(EXPECTANCYBASE));
-  print(" ");
-  print("Result : " + resultString);
+  print("\nResult : " + resultString);
   print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
   print("*****************************");
 
