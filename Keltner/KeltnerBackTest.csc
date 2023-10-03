@@ -1,4 +1,4 @@
-# Keltner trading strategy backtest 2.0.1 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
+# Keltner trading strategy backtest 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
 # Script Name
 script KeltnerBackTest;
@@ -22,7 +22,7 @@ float   ATRMULTIPLIER   = 0.5;                    # ATR multiplier
 integer ATRLENGTH       = 14;                     # ATR period length (must be over than 3)
 string  RESOL           = "30m";                  # Bar resolution
 float   AMOUNT          = 1.0;                    # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-09-02 00:00:00";  # Backtest start datetime
+string  STARTDATETIME   = "2023-07-02 00:00:00";  # Backtest start datetime
 string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                   # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;                  # Trailing stop flag
