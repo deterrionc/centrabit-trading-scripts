@@ -18,7 +18,7 @@ import "library.csh";
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 integer EMALEN          = 20;                     # EMA period length
-float   ATRMULTIPLIER   = 0.5;                    # ATR multiplier
+float   ATRMULTIPLIER   = 0.3;                    # ATR multiplier
 integer ATRLENGTH       = 14;                     # ATR period length (must be over than 3)
 string  RESOL           = "30m";                  # Bar resolution
 float   AMOUNT          = 1.0;                    # The amount of buy or sell order at once
@@ -457,37 +457,9 @@ void onPubOrderFilledTest(transaction t) {
   }
 }
 
-void onTimeOutTest() {
-  # if (sizeof(transactions) == 0) {
-  #   return;
-  # }
-  # bar curBar = generateBar(transactions);
-  # emaPrices >> curBar.closePrice;
-  # delete emaPrices[0];
-  # 
-  # ema = EMA(emaPrices, EMALEN);
-  # atr = ATR(lastBar, curBar);
-  # upperBand = ema + ATRMULTIPLIER * atr;
-  # lowerBand = ema - ATRMULTIPLIER * atr;
-  # 
-  # lastBar = curBar;
-  # delete transactions;
-}
-
 float backtest() {
   initCommonParameters();
-
   print("^^^^^^^^ Keltner Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^\n");
-  print("");
-
-  # Connection Checking
-  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
-  integer conTestEndTime = getCurrentTime();
-  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
-  if (sizeof(conTestTrans) == 0) {
-    print("Fetching Data failed. Please check the connection and try again later");
-    exit;
-  }
 
   # Fetching the historical trading data of given datatime period
   integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
@@ -582,7 +554,6 @@ float backtest() {
   integer msleepFlag = 0;
 
   integer timestampToStartLast24Hours = currentTime - 86400000000;  # 86400000000 = 24 * 3600 * 1000 * 1000
-  integer lastUpdatedTimestamp = testTrans[0].tradeTime;
 
   integer timecounter = 0;  
 
@@ -594,15 +565,8 @@ float backtest() {
       updateTicker = i % step;
       if (updateTicker == 0 && i != 0) {
         updateKeltnerParams(testTrans[i]);
-        lastUpdatedTimestamp = testTrans[i].tradeTime;
       } 
       updateTicker ++;     
-    } else {
-        timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
-        if (timecounter > (resolution * 60 * 1000 * 1000)) {
-          # updateKeltnerParams(testTrans[i]);
-          lastUpdatedTimestamp = testTrans[i].tradeTime;         
-        }
     }
 
     if (i == (cnt - 1)) {
