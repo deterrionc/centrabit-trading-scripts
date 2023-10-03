@@ -496,12 +496,12 @@ void backtest() {
 
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
 
-  transaction testTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
-  if (sizeof(testTrans) == 0) {
+  transaction transForTest[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
+  if (sizeof(transForTest) == 0) {
     print("Fetching Data failed. Please check the connection and try again later");
     exit;
   }
-  print(sizeof(testTrans));
+  print(sizeof(transForTest));
 
   integer resolution = interpretResol(RESOL);
 
@@ -516,7 +516,7 @@ void backtest() {
   clearCharts();
   setChartBarCount(10);
   setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
-  setChartTime(testTrans[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
+  setChartTime(transForTest[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
 
   setChartDataTitle("BollingerBands - " + toString(SMALEN) + ", " + toString(STDDEVSETTING));
 
@@ -565,33 +565,33 @@ void backtest() {
 
   print("--------------   Running   -------------------");
 
-  integer cnt = sizeof(testTrans);
+  integer cnt = sizeof(transForTest);
   integer step = resolution * 2;
   integer updateTicker = 0;
   integer msleepFlag = 0;
 
 
   integer timestampToStartLast24Hours = currentTime - 86400000000;  # 86400000000 = 24 * 3600 * 1000 * 1000
-  integer lastUpdatedTimestamp = testTrans[0].tradeTime;
+  integer lastUpdatedTimestamp = transForTest[0].tradeTime;
 
   integer timecounter = 0;
 
   setChartsPairBuffering(true);
 
   for (integer i = 0; i < cnt; i++) {
-    onPubOrderFilledTest(testTrans[i]);
-    if (testTrans[i].tradeTime < timestampToStartLast24Hours) {
+    onPubOrderFilledTest(transForTest[i]);
+    if (transForTest[i].tradeTime < timestampToStartLast24Hours) {
       updateTicker = i % step;
       if (updateTicker == 0) {
         onTimeOutTest();
-        lastUpdatedTimestamp = testTrans[i].tradeTime;
+        lastUpdatedTimestamp = transForTest[i].tradeTime;
       } 
       updateTicker++;     
     } else {
-      timecounter = testTrans[i].tradeTime - lastUpdatedTimestamp;
+      timecounter = transForTest[i].tradeTime - lastUpdatedTimestamp;
       if (timecounter > (resolution * 60 * 1000 * 1000)) {
         onTimeOutTest();
-        lastUpdatedTimestamp = testTrans[i].tradeTime;         
+        lastUpdatedTimestamp = transForTest[i].tradeTime;         
       }
     }
 
@@ -600,29 +600,29 @@ void backtest() {
         transaction t;
         currentOrderId++;
         if (prevPosition == "long") {                 # sell order emulation
-          print(toString(currentOrderId) + " sell order (" + timeToString(testTrans[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(testTrans[i].price) + "  amount: "+ toString(AMOUNT));
+          print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = testTrans[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+          t.price = transForTest[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE;
-          t.tradeTime = testTrans[i].tradeTime;
+          t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
           sellCount++;
-          drawChartPointToSeries("Sell", testTrans[i].tradeTime, testTrans[i].price);
+          drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else {                                      # buy order emulation
-          print(toString(currentOrderId) + " buy order (" + timeToString(testTrans[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(testTrans[i].price) + "  amount: "+ toString(AMOUNT));
+          print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = testTrans[i].price + testTrans[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+          t.price = transForTest[i].price + transForTest[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE;
-          t.tradeTime = testTrans[i].tradeTime;
+          t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
           buyCount++;
-          drawChartPointToSeries("Buy", testTrans[i].tradeTime, testTrans[i].price);
+          drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
         }
       }
     }
