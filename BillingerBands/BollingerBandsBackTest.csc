@@ -290,15 +290,15 @@ void onPubOrderFilledTest(transaction t) {
 
       buyStopped = true;
       # Emulate Sell Order
-      transaction filledTransaction;
-      filledTransaction.id = currentOrderId;
-      filledTransaction.marker = currentOrderId;
-      filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE;
-      filledTransaction.tradeTime = t.tradeTime;
-      filledTransaction.isAsk = false;
-      onOwnOrderFilledTest(filledTransaction);
+      transaction filledTran;
+      filledTran.id = currentOrderId;
+      filledTran.marker = currentOrderId;
+      filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+      filledTran.amount = AMOUNT;
+      filledTran.fee = AMOUNT * t.price * FEE;
+      filledTran.tradeTime = t.tradeTime;
+      filledTran.isAsk = false;
+      onOwnOrderFilledTest(filledTran);
 
       position = "flat";
       prevPosition = "long";
@@ -312,15 +312,15 @@ void onPubOrderFilledTest(transaction t) {
 
       sellStopped = true;
       # Emulate Buy Order
-      transaction filledTransaction;
-      filledTransaction.id = currentOrderId;
-      filledTransaction.marker = currentOrderId;
-      filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE;
-      filledTransaction.tradeTime = t.tradeTime;
-      filledTransaction.isAsk = true;
-      onOwnOrderFilledTest(filledTransaction);
+      transaction filledTran;
+      filledTran.id = currentOrderId;
+      filledTran.marker = currentOrderId;
+      filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+      filledTran.amount = AMOUNT;
+      filledTran.fee = AMOUNT * t.price * FEE;
+      filledTran.tradeTime = t.tradeTime;
+      filledTran.isAsk = true;
+      onOwnOrderFilledTest(filledTran);
 
       position = "flat";
       prevPosition = "short";
@@ -358,20 +358,20 @@ void onPubOrderFilledTest(transaction t) {
         }
 
         # Emulate Sell Order
-        transaction filledTransaction;
-        filledTransaction.id = currentOrderId;
-        filledTransaction.marker = currentOrderId;
-        filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+        transaction filledTran;
+        filledTran.id = currentOrderId;
+        filledTran.marker = currentOrderId;
+        filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
+          filledTran.amount = AMOUNT;
+          filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
         } else {
-          filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE;
+          filledTran.amount = AMOUNT;
+          filledTran.fee = AMOUNT * t.price * FEE;
         }
-        filledTransaction.tradeTime = t.tradeTime;
-        filledTransaction.isAsk = false;
-        onOwnOrderFilledTest(filledTransaction);
+        filledTran.tradeTime = t.tradeTime;
+        filledTran.isAsk = false;
+        onOwnOrderFilledTest(filledTran);
 
         if (position == "flat") {
           if (prevPosition == "") {
@@ -415,20 +415,20 @@ void onPubOrderFilledTest(transaction t) {
         }
 
         # emulating buy order filling
-        transaction filledTransaction;
-        filledTransaction.id = currentOrderId;
-        filledTransaction.marker = currentOrderId;
-        filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+        transaction filledTran;
+        filledTran.id = currentOrderId;
+        filledTran.marker = currentOrderId;
+        filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
         if (currentOrderId == 1) {
-          filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT / 2.0 * t.price * FEE;
+          filledTran.amount = AMOUNT;
+          filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
         } else {
-          filledTransaction.amount = AMOUNT;
-          filledTransaction.fee = AMOUNT * t.price * FEE;
+          filledTran.amount = AMOUNT;
+          filledTran.fee = AMOUNT * t.price * FEE;
         }
-        filledTransaction.tradeTime = t.tradeTime;
-        filledTransaction.isAsk = true;
-        onOwnOrderFilledTest(filledTransaction);
+        filledTran.tradeTime = t.tradeTime;
+        filledTran.isAsk = true;
+        onOwnOrderFilledTest(filledTran);
 
         if (position == "flat") {
           if (prevPosition == "") {

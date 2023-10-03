@@ -203,15 +203,15 @@ void onPubOrderFilledTest(transaction t) {
 
     if (position == "long") {         # Bought -> SELL
       print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
-      transaction filledTransaction;
-      filledTransaction.id = currentOrderId;
-      filledTransaction.marker = currentOrderId;
-      filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
-      filledTransaction.tradeTime = t.tradeTime;
-      filledTransaction.isAsk = false;
-      onOwnOrderFilledTest(filledTransaction);
+      transaction filledTran;
+      filledTran.id = currentOrderId;
+      filledTran.marker = currentOrderId;
+      filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+      filledTran.amount = AMOUNT;
+      filledTran.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTran.tradeTime = t.tradeTime;
+      filledTran.isAsk = false;
+      onOwnOrderFilledTest(filledTran);
 
       position = "flat";
       prevPosition = "long";
@@ -222,15 +222,15 @@ void onPubOrderFilledTest(transaction t) {
 
     if (position == "short") {        # Sold -> Buy
       print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
-      transaction filledTransaction;
-      filledTransaction.id = currentOrderId;
-      filledTransaction.marker = currentOrderId;
-      filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-      filledTransaction.amount = AMOUNT;
-      filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
-      filledTransaction.tradeTime = t.tradeTime;
-      filledTransaction.isAsk = true;
-      onOwnOrderFilledTest(filledTransaction);
+      transaction filledTran;
+      filledTran.id = currentOrderId;
+      filledTran.marker = currentOrderId;
+      filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+      filledTran.amount = AMOUNT;
+      filledTran.fee = AMOUNT * t.price * FEE * 0.01;
+      filledTran.tradeTime = t.tradeTime;
+      filledTran.isAsk = true;
+      onOwnOrderFilledTest(filledTran);
 
       position = "flat";
       prevPosition = "short";
@@ -286,15 +286,15 @@ void onPubOrderFilledTest(transaction t) {
         print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
     
         # emulating buy order filling
-        transaction filledTransaction;
-        filledTransaction.id = currentOrderId;
-        filledTransaction.marker = currentOrderId;
-        filledTransaction.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
-        filledTransaction.amount = AMOUNT;
-        filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
-        filledTransaction.tradeTime = t.tradeTime;
-        filledTransaction.isAsk = true;
-        onOwnOrderFilledTest(filledTransaction);
+        transaction filledTran;
+        filledTran.id = currentOrderId;
+        filledTran.marker = currentOrderId;
+        filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+        filledTran.amount = AMOUNT;
+        filledTran.fee = AMOUNT * t.price * FEE * 0.01;
+        filledTran.tradeTime = t.tradeTime;
+        filledTran.isAsk = true;
+        onOwnOrderFilledTest(filledTran);
 
         if (position == "flat") {
           if (prevPosition == "") {
@@ -335,15 +335,15 @@ void onPubOrderFilledTest(transaction t) {
         print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
 
         # emulating sell order filling
-        transaction filledTransaction;
-        filledTransaction.id = currentOrderId;
-        filledTransaction.marker = currentOrderId;
-        filledTransaction.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
-        filledTransaction.amount = AMOUNT;
-        filledTransaction.fee = AMOUNT * t.price * FEE * 0.01;
-        filledTransaction.tradeTime = t.tradeTime;
-        filledTransaction.isAsk = false;
-        onOwnOrderFilledTest(filledTransaction);
+        transaction filledTran;
+        filledTran.id = currentOrderId;
+        filledTran.marker = currentOrderId;
+        filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+        filledTran.amount = AMOUNT;
+        filledTran.fee = AMOUNT * t.price * FEE * 0.01;
+        filledTran.tradeTime = t.tradeTime;
+        filledTran.isAsk = false;
+        onOwnOrderFilledTest(filledTran);
           
         if (position == "flat") {
           if (prevPosition == "") {
