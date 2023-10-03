@@ -18,11 +18,11 @@ import "library.csh";
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 integer EMALEN          = 20;                     # EMA period length
-float   ATRMULTIPLIER   = 0.3;                    # ATR multiplier
+float   ATRMULTIPLIER   = 0.5;                    # ATR multiplier
 integer ATRLENGTH       = 14;                     # ATR period length (must be over than 3)
 string  RESOL           = "30m";                  # Bar resolution
 float   AMOUNT          = 1.0;                    # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-09-22 00:00:00";  # Backtest start datetime
+string  STARTDATETIME   = "2023-07-02 00:00:00";  # Backtest start datetime
 string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                   # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;                  # Trailing stop flag
@@ -111,13 +111,6 @@ void updateKeltnerParams(transaction t) {
 }
 
 void onOwnOrderFilledTest(transaction t) {
-  # print("Transactions: " + toString(sizeof(transactions)));
-  # print("EMA Prices: " + toString(sizeof(emaPrices)));
-  # print("ATR Bars: " + toString(sizeof(atrBars)));
-  # print("EMA: " + toString(ema));
-  # print("ATR: " + toString(atr));
-  # print("Upper Band: " + toString(upperBand));
-  # print("Lower Band: " + toString(lowerBand));
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
@@ -292,10 +285,7 @@ boolean trailingStopTick(float price) {
 }
 
 void onPubOrderFilledTest(transaction t) {
-  transactions >> t;
   currentTran = t;
-
-  # updateKeltnerParams(t);
 
   drawChartPointToSeries("Middle", t.tradeTime, ema);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
