@@ -29,13 +29,15 @@ float   EXPECTANCYBASE  = 0.1;                      # expectancy base
 float   FEE             = 0.002;                    # taker fee in percentage
 #############################################
 
-# Trading Variables
+# PSAR Variables
 string  trend;                                      # "", "up", "down"
 float   highs[];
 float   lows[];
 float   psar;
 float   ep              = 0.0;
 float   af              = AFINIT;
+
+# Trading Variables
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
@@ -49,8 +51,6 @@ float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 # Additional needs in backtest mode
 float   minFillOrderPercentage  = 0.0;
@@ -58,10 +58,9 @@ float   maxFillOrderPercentage  = 0.0;
 integer profitSeriesID          = 0;
 string  profitSeriesColor       = "green";
 string  tradeSign               = "";
+boolean reversed;
 transaction currentTran;
 transaction entryTran;
-
-boolean reversed;
 
 bar barData[];
 integer resolution = interpretResol(RESOL);
@@ -95,12 +94,8 @@ void onOwnOrderFilledTest(transaction t) {
 
   if (t.isAsk == false) {                   # when sell order fillend
     sellTotal += amount;
-    baseCurrencyBalance -= AMOUNT;
-    quoteCurrencyBalance += amount;
   } else {                                  # when buy order filled
     buyTotal += amount;
-    baseCurrencyBalance += AMOUNT;
-    quoteCurrencyBalance -= amount;
   }
 
   integer isOddOrder = t.marker % 2;
@@ -549,27 +544,22 @@ void backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
 
-  print("--------------------------------------------------------------------------------------------------------------------------");
+  print("\n--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
-  print(" ");
-  print("--------------------------------------------------------------------------------------------------------------------------");
-  print("Reward-to-Risk Ratio : " + toString(rewardToRiskRatio));
+  print("--------------------------------------------------------------------------------------------------------------------------\n");
+  print("\nReward-to-Risk Ratio : " + toString(rewardToRiskRatio));
   print("Win/Loss Ratio : " + toString(winLossRatio));
   print("Win Ratio  : " + toString(winRatio));
   print("Loss Ratio : " + toString(lossRatio));
   print("Expectancy : " + toString(tharpExpectancy));
   print("@ Expectancy Base: " + toString(EXPECTANCYBASE));
-  print(" ");
-  print("Result : " + resultString);
-
+  print("\nResult : " + resultString);
   print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
   print("*****************************");
 

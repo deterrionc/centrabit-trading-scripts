@@ -56,8 +56,6 @@ boolean stopLossFlag    = false;
 boolean stopped         = false;
 
 # Additional needs in backtest mode
-float   minFillOrderPercentage  = 0.0;
-float   maxFillOrderPercentage  = 0.0;
 integer profitSeriesID          = 0;
 string  profitSeriesColor       = "green";
 string  tradeSign               = "";
@@ -252,7 +250,7 @@ void onPubOrderFilledTest(transaction t) {
       transaction filledTran;
       filledTran.id = currentOrderId;
       filledTran.marker = currentOrderId;
-      filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+      filledTran.price = t.price;
       filledTran.amount = AMOUNT;
       filledTran.fee = AMOUNT * t.price * FEE;
       filledTran.tradeTime = t.tradeTime;
@@ -270,7 +268,7 @@ void onPubOrderFilledTest(transaction t) {
       transaction filledTran;
       filledTran.id = currentOrderId;
       filledTran.marker = currentOrderId;
-      filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+      filledTran.price = t.price;
       filledTran.amount = AMOUNT;
       filledTran.fee = AMOUNT * t.price * FEE;
       filledTran.tradeTime = t.tradeTime;
@@ -314,7 +312,7 @@ void onPubOrderFilledTest(transaction t) {
       transaction filledTran;
       filledTran.id = currentOrderId;
       filledTran.marker = currentOrderId;
-      filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+      filledTran.price = t.price;
       if (currentOrderId == 1) {
         filledTran.amount = AMOUNT / 2.0;
         filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
@@ -356,7 +354,7 @@ void onPubOrderFilledTest(transaction t) {
       transaction filledTran;
       filledTran.id = currentOrderId;
       filledTran.marker = currentOrderId;
-      filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+      filledTran.price = t.price;
       if (currentOrderId == 1) {
         filledTran.amount = AMOUNT / 2.0;
         filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
@@ -485,7 +483,6 @@ void backtest() {
 
   integer timestampToStartLast24Hours = currentTime - 86400000000;  # 86400000000 = 24 * 3600 * 1000 * 1000
   integer lastUpdatedTimestamp = transForTest[0].tradeTime;
-
   integer timecounter = 0;
 
   setChartsPairBuffering(true);
