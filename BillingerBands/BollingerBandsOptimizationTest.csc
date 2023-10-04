@@ -16,39 +16,34 @@ import "library.csh";
 # User settings
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
-
-integer SMALENSTART = 20;
-integer SMALENEND = 50;
-integer SMALENSTEP = 10;
-float STDDEVSTART = 2.0;
-float STDDEVEND = 2.0;
-float STDDEVSTEP = 2.0;
-string RESOLSTART = "1h";
-string RESOLEND = "1h";
-string RESOLSTEP = "1h";
-
-float   EXPECTANCYBASE  = 0.1;                     # expectancy base
-float   FEE             = 0.01;                               # taker fee in percentages
-
-float   AMOUNT          = 1.0;                             # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-03-01 00:00:00";   # Backtest start datetime
-string  ENDDATETIME     = "now";                     # Backtest end datetime
-float   STOPLOSSAT      = 0.05;                            # Stoploss as fraction of price
+integer SMALENSTART     = 20;
+integer SMALENEND       = 30;
+integer SMALENSTEP      = 10;
+float   STDDEVSTART     = 2.0;
+float   STDDEVEND       = 2.0;
+float   STDDEVSTEP      = 2.0;
+string  RESOLSTART      = "1h";
+string  RESOLEND        = "1h";
+string  RESOLSTEP       = "1h";
+float   EXPECTANCYBASE  = 0.1;                              # expectancy base
+float   FEE             = 0.01;                             # taker fee in percentages
+float   AMOUNT          = 1.0;                              # The amount of buy or sell order at once
+string  STARTDATETIME   = "2023-07-03 00:00:00";            # Backtest start datetime
+string  ENDDATETIME     = "now";                            # Backtest end datetime
+float   STOPLOSSAT      = 0.05;                             # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;
-
 #############################################
 
-string  position        = "flat";
-string  prevPosition    = "";    # "", "long", "short"
-
+# BollingerBands Variables
 float   sma             = 100.0;
 float   upperBand       = 0.0;
 float   lowerBand       = 0.0;
-float stddev = 0.0;
+float   stddev          = 0.0;
+float   smaPrices[];
 
-transaction transForTest[];
-float barPricesInSMAPeriod[];
-
+# Trading Variables
+string  position        = "flat";
+string  prevPosition    = "";                               # "", "long", "short"
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
@@ -61,28 +56,21 @@ float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
-
 float   lastPrice       = 0.0;
 float   lastOwnOrderPrice = 0.0;
 
 # Stop-loss and trailing stop info
-float lockedPriceForProfit = 0.0;
-
-# Additional needs in backtest mode
-float   minFillOrderPercentage = 0.0;
-float   maxFillOrderPercentage = 0.0;
+float   lockedPriceForProfit = 0.0;
 
 # Current running sma, stddev, resol
 integer SMALEN          = 20;                             # SMA period length
-float STDDEVSETTING = 2.0;                      # Standard Deviation
-string  RESOL           = "1h";                            # Bar resolution
+float   STDDEVSETTING   = 2.0;                            # Standard Deviation
+string  RESOL           = "1h";                           # Bar resolution
 
 # Drawable flag
 boolean drawable = false;
+transaction transForTest[];
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
@@ -90,12 +78,8 @@ void onOwnOrderFilledTest(transaction t) {
 
   if (t.isAsk == false) {                # when sell order fillend
     sellTotal += amount;
-    baseCurrencyBalance -= AMOUNT;
-    quoteCurrencyBalance += amount;
   } else {                                 # when buy order fillend
     buyTotal += amount;
-    baseCurrencyBalance += AMOUNT;
-    quoteCurrencyBalance -= amount;
   }
 
   integer isOddOrder = t.marker % 2;
@@ -103,7 +87,7 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
     for (integer i=0; i<strlength(tradeNumStr); i++) {
       tradeLog += " ";
@@ -129,7 +113,7 @@ void onOwnOrderFilledTest(transaction t) {
     }
     tradeLogList >> tradeLog;
   } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
     tradeLog += toString(tradeNumber);
     if (t.isAsk == false) {
       tradeLog += "\tSE  ";
@@ -155,13 +139,13 @@ boolean stopLossTick(integer timeStamp, float price) {
     limitPrice = lastOwnOrderPrice * (1.0 - STOPLOSSAT);
     if (price < limitPrice) {
       currentOrderId++;
-      print(toString(currentOrderId) + " sell order (" + timeToString(timeStamp, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Sell", timeStamp, price, AMOUNT, "  (StopLoss order)");
 
       # emulating sell order filling
       transaction t;
       t.id = currentOrderId;
       t.marker = currentOrderId;
-      t.price = price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+      t.price = price;
       t.amount = AMOUNT;
       t.fee = AMOUNT*price*FEE * 0.01;
       t.tradeTime = timeStamp;
@@ -178,13 +162,13 @@ boolean stopLossTick(integer timeStamp, float price) {
     limitPrice = lastOwnOrderPrice * (1.0 + STOPLOSSAT);
     if (price > limitPrice ) {
       currentOrderId ++;
-      print(toString(currentOrderId) + " buy order (" + timeToString(timeStamp, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Buy", timeStamp, price, AMOUNT, "  (StopLoss order)");
 
       # emulating buy order filling
       transaction t;
       t.id = currentOrderId;
       t.marker = currentOrderId;
-      t.price = price + price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+      t.price = price + price;
       t.amount = AMOUNT;
       t.fee = AMOUNT*price*FEE * 0.01;
       t.tradeTime = timeStamp;
@@ -200,7 +184,6 @@ boolean stopLossTick(integer timeStamp, float price) {
   }
   return false;
 }
-
 
 boolean trailingStopTick(float price) {
   if (USETRAILINGSTOP == false)
@@ -222,13 +205,13 @@ boolean trailingStopTick(float price) {
 }
 
 void updateBollingerBands() {
-    barPricesInSMAPeriod >> lastPrice;
-    delete barPricesInSMAPeriod[0];
+  smaPrices >> lastPrice;
+  delete smaPrices[0];
 
-    sma = SMA(barPricesInSMAPeriod);
-    stddev = STDDEV(barPricesInSMAPeriod, sma);
-    upperBand = bollingerUpperBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
-    lowerBand = bollingerLowerBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
+  sma = SMA(smaPrices);
+  stddev = STDDEV(smaPrices, sma);
+  upperBand = bollingerUpperBand(smaPrices, sma, stddev, STDDEVSETTING);
+  lowerBand = bollingerLowerBand(smaPrices, sma, stddev, STDDEVSETTING);
 }
 
 void bollingerBandsTick(integer tradeTime, float price) {
@@ -265,13 +248,12 @@ void bollingerBandsTick(integer tradeTime, float price) {
   if (signal == "sell") {
     # Sell oder execution
     currentOrderId ++;
-    print(toString(currentOrderId) + " sell order (" + timeToString(tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(price) + "  amount: "+ toString(AMOUNT));
-
+    printOrderLogs(currentOrderId, "Sell", tradeTime, price, AMOUNT, "");
     # emulating sell order filling
     transaction t;
     t.id = currentOrderId;
     t.marker = currentOrderId;
-    t.price = price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+    t.price = price;
     t.amount = AMOUNT;
     t.fee = AMOUNT*price*FEE * 0.01;
     t.tradeTime = tradeTime;
@@ -296,13 +278,13 @@ void bollingerBandsTick(integer tradeTime, float price) {
   if (signal == "buy") {
     # buy order execution
     currentOrderId ++;
-    print(toString(currentOrderId) + " buy order (" + timeToString(tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(price) + "  amount: "+ toString(AMOUNT));
+    printOrderLogs(currentOrderId, "Buy", tradeTime, price, AMOUNT, "");
 
     # emulating buy order filling
     transaction t;
     t.id = currentOrderId;
     t.marker = currentOrderId;
-    t.price = price + price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+    t.price = price;
     t.amount = AMOUNT;
     t.fee = AMOUNT*price*FEE * 0.01;
     t.tradeTime = tradeTime;
@@ -331,7 +313,7 @@ void onPubOrderFilledTest(transaction t) {
 }
 
 void onTimedOutTest() {
-    updateBollingerBands();
+  updateBollingerBands();
 }
 
 ####################################################
@@ -353,8 +335,6 @@ float backtest() {
   entryFee = 0.0;
 
   delete tradeLogList;
-  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
   # print("--------------   Backtest Running   -------------------");
 
@@ -365,28 +345,12 @@ float backtest() {
   print("Preparing Bars in Period...");
   bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SMALEN, resolution * 60 * 1000 * 1000);
   for (integer i=0; i<sizeof(barsInPeriod); i++) {
-    barPricesInSMAPeriod >> barsInPeriod[i].closePrice;
+    smaPrices >> barsInPeriod[i].closePrice;
   }
 
   print("Checking order book status..");
   float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
   float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
-
-  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-
-
-  minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
-  maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;
-  if (AMOUNT < 10.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.999;
-  } else if (AMOUNT <100.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.998;
-  } else if (AMOUNT < 1000.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  } else {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  }
 
   currentOrderId = 0;
   buyTotal = 0.0;
@@ -396,10 +360,10 @@ float backtest() {
   feeTotal = 0.0;
   prevPosition = "";
 
-  sma = SMA(barPricesInSMAPeriod);
-  stddev = STDDEV(barPricesInSMAPeriod, sma);
-  upperBand = bollingerUpperBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
-  lowerBand = bollingerLowerBand(barPricesInSMAPeriod, sma, stddev, STDDEVSETTING);
+  sma = SMA(smaPrices);
+  stddev = STDDEV(smaPrices, sma);
+  upperBand = bollingerUpperBand(smaPrices, sma, stddev, STDDEVSETTING);
+  lowerBand = bollingerLowerBand(smaPrices, sma, stddev, STDDEVSETTING);
 
   print("Initial SMA :" + toString(sma));
   print("Initial bollingerSTDDEV :" + toString(stddev));
@@ -468,11 +432,12 @@ float backtest() {
         transaction t;
         currentOrderId++;
         if (prevPosition == "long") { # sell order emulation
-          if (drawable == true)
-            print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          if (drawable == true) {
+            printOrderLogs(currentOrderId, "Sell", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
+          }
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
           t.tradeTime = transForTest[i].tradeTime;
@@ -484,11 +449,12 @@ float backtest() {
             drawChartPointToSeries("Direction", transForTest[i].tradeTime, transForTest[i].price);             
           }
         } else { # buy order emulation
-          if (drawable == true)
-            print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          if (drawable == true) {
+            printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
+          }
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price + transForTest[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
           t.tradeTime = transForTest[i].tradeTime;
@@ -511,8 +477,9 @@ float backtest() {
 
   # delete transForTest;
 
-  if (drawable == true)
+  if (drawable == true) {
     setChartsPairBuffering(false);
+  }
 
   float rewardToRiskRatio = totalWin / totalLoss;
   float winLossRatio = toFloat(winCount) / toFloat(lossCount);
@@ -574,11 +541,6 @@ string optimization() {
 
   string paramSetResult[];
   float profitResult[];
-
-  # integer smas[];
-  # integer stddevs[];
-  # integer resols[];
-
   integer RESOLSTARTInt = toInteger(substring(RESOLSTART, 0, strlength(RESOLSTART)-1));
   integer RESOLENDInt = toInteger(substring(RESOLEND, 0, strlength(RESOLEND)-1));
   integer RESOLSTEPInt = toInteger(substring(RESOLSTEP, 0, strlength(RESOLSTEP)-1));
@@ -638,10 +600,6 @@ string optimization() {
 
         print("------------------- Bacttest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
         profit = backtest();
-        # print("Param Set " + toString(paramSetNo) + " : " + paramSet + ", result : " + toString(profit));
-        # smas >> i;
-        # stddevs >> j;
-        # resols >> k;
         profitResult >> profit;
         paramSetResult >> paramSet;
         msleep(100);
@@ -657,35 +615,20 @@ string optimization() {
     }
   }
 
-  # SMALEN = smas[best];
-  # STDDEVSETTING = stddevs[best];
-  # resolStr = toString(resols[best]);
-  # RESOL = strinsert(resolStr, strlength(resolStr), RESOLSTARTUnitSymbol);
+  print("\n================= Total optimization test result =================\n");
 
-  # drawable = true;
-  # backtest();
-
-  print(" ");
-
-  print("================= Total optimization test result =================");
-
-  print(" ");
   for (integer k=0; k< sizeof(paramSetResult); k++) {
     paramSetResult[k] = paramSetResult[k] + ", Profit : " + toString(profitResult[k]);
     print(paramSetResult[k]);
   }
 
   print("---------------- The optimized param set --------------");
-
   print(paramSetResult[best]);
 
   print("-------------------------------------------------------");
-  print(" ");
-  print("===========================================================");
-  print(" ");
+  print("\n===========================================================\n");
 
   return paramSetResult[best];
 }
-
 
 optimization();
