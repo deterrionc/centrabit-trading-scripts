@@ -24,7 +24,7 @@ integer PERIOD          = 14;
 float   STOPLOSSAT      = 0.05;
 float   AMOUNT          = 1.0;                     # The amount of buy or sell order at once
 float   EXPECTANCYBASE  = 0.1;                     # expectancy base
-float   FEE             = 0.01;                    # taker fee in percentage
+float   FEE             = 0.002;                   # taker fee in percentage
 #############################################
 
 # Trading Variables
