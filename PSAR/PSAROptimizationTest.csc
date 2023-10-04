@@ -102,13 +102,13 @@ void onOwnOrderFilledTest(transaction t) {
     float profit;
     if (t.isAsk == false) {
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += "\tLX  ";
+      tradeLog += "\tLX\t";
     } else {
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += "\tSX  ";
+      tradeLog += "\tSX\t";
     }
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(profit) + "\t" + toString(sellTotal - buyTotal - feeTotal);
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
 
     if (profit >= 0.0 ) {
       totalWin += profit;
@@ -123,9 +123,9 @@ void onOwnOrderFilledTest(transaction t) {
 
     tradeLog += toString(tradeNumber);
     if (t.isAsk == false) {
-      tradeLog += "\tSE  ";
+      tradeLog += "\tSE\t";
     } else {
-      tradeLog += "\tLE  ";
+      tradeLog += "\tLE\t";
     }
     entryAmount = amount;
     entryFee = t.fee;
@@ -439,10 +439,11 @@ float backtest() {
 
   print("");
   
-  string tradeLogListTitle = "Trade\tTime\t\t" + SYMBOLSETTING + "\tMax" + getBaseCurrencyName(SYMBOLSETTING) + "\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\tAcc\tDrawdown";
+  string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
+
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);

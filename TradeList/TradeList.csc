@@ -137,17 +137,17 @@ void closeTrade(integer timestamp, float orderAmount, float price) {
 
 # Emulate trading with given orders
 void main() {
-  string tradeLogListTitle = "Trade\tTime";
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), SYMBOLSETTING);
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(SYMBOLSETTING));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(SYMBOLSETTING));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
+  string tradeListTitle = "Trade\tTime";
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\t\t");
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), SYMBOLSETTING);
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tMax");
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getBaseCurrencyName(SYMBOLSETTING));
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tProf");
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getQuoteCurrencyName(SYMBOLSETTING));
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tAcc\tDrawdown");
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
 
   for (integer i=0; i<sizeof(txAmount); i++) {

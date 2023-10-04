@@ -296,11 +296,11 @@ event onOwnOrderFilled(string exchange, transaction t) {
     if (t.isAsk == false) {
       tradeSign = "LX";
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += "\tLX  ";
+      tradeLog += "\tLX\t";
     } else {
       tradeSign = "SX";
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += "\tSX  ";
+      tradeLog += "\tSX\t";
     }
 
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount / 2.0);
