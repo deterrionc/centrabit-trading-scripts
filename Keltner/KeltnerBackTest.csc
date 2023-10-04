@@ -27,7 +27,7 @@ string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                   # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;                  # Trailing stop flag
 float   EXPECTANCYBASE  = 0.1;                    # expectancy base
-float   FEE             = 0.002;                  # taker fee in percentage
+float   FEE             = 0.002;                  # trading fee as a decimal (0.2%)
 #############################################
 
 # Keltner Variables

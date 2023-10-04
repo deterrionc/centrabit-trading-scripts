@@ -38,7 +38,7 @@ string  STARTDATETIME   = "2023-03-01 00:00:00";   # Backtest start datetime
 string  ENDDATETIME     = "now";     # Backtest end datetime
 
 float   EXPECTANCYBASE  = 0.1;                     # expectancy base
-float   FEE             = 0.002;                               # taker fee in percentage
+float   FEE             = 0.002;                               # trading fee as a decimal (0.2%)
 
 #############################################
 

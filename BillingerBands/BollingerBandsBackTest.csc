@@ -26,7 +26,7 @@ string  STARTDATETIME   = "2023-07-02 00:00:00";            # Backtest start dat
 string  ENDDATETIME     = "now";                            # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                             # Stoploss as fraction of price
 float   EXPECTANCYBASE  = 0.1;                              # expectancy base
-float   FEE             = 0.002;                            # taker fee in percentage
+float   FEE             = 0.002;                            # trading fee as a decimal (0.2%)
 boolean USETRAILINGSTOP = false;                            # Trailing stop flag
 string  logFilePath     = "c:/bbtest_log_tradelist_";       # Please make sure this path any drive except C:
 #############################################
