@@ -253,12 +253,12 @@ event onOwnOrderFilled(string exchange, transaction t) {
       # drawChartPointToSeries("Sell", t.tradeTime, t.price);
       tradeSign = "LX";
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += "\tLX  ";
+      tradeLog += "\tLX\t";
     } else {
       # drawChartPointToSeries("Buy", t.tradeTime, t.price);
       tradeSign = "SX";
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += "\tSX  ";
+      tradeLog += "\tSX\t";
     }
 
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "," + toString(t.price) + ",," + toString(profit) + "," + toString(sellTotal - buyTotal - feeTotal)+"\n";

@@ -120,13 +120,13 @@ void onOwnOrderFilledTest(transaction t) {
     float profit;
     if (t.isAsk == false) {
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog += "\tLX  ";
+      tradeLog += "\tLX\t";
     } else {
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog += "\tSX  ";
+      tradeLog += "\tSX\t";
     }
 
-    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(profit) + "\t" + toString(sellTotal - buyTotal - feeTotal);
+    tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
 
     string tradeResult;
     if (profit >= 0.0 ) {
@@ -164,9 +164,9 @@ void onOwnOrderFilledTest(transaction t) {
     print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
     tradeLog += toString(tradeNumber);
     if (t.isAsk == false) {
-      tradeLog += "\tSE  ";
+      tradeLog += "\tSE\t";
     } else {
-      tradeLog += "\tLE  ";
+      tradeLog += "\tLE\t";
     }
     entryAmount = amount;
     entryFee = t.fee;
@@ -174,7 +174,7 @@ void onOwnOrderFilledTest(transaction t) {
     if (tradeNumber == 1) {
       tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT / 2.0);
     } else {
-      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT);
+      tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT);
     }
 
     tradeLogList >> tradeLog;
@@ -539,17 +539,17 @@ void backtest() {
 
   print("");
   
-  string tradeLogListTitle = "\tTrade\tTime";
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\t\t");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), SYMBOLSETTING);
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tMax");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getBaseCurrencyName(SYMBOLSETTING));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tProf");
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), getQuoteCurrencyName(SYMBOLSETTING));
-  tradeLogListTitle = strinsert(tradeLogListTitle, strlength(tradeLogListTitle), "\tAcc\tDrawdown");
+  string tradeListTitle = "\tTrade\tTime";
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\t\t");
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), SYMBOLSETTING);
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tMax");
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getBaseCurrencyName(SYMBOLSETTING));
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tProf");
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), getQuoteCurrencyName(SYMBOLSETTING));
+  tradeListTitle = strinsert(tradeListTitle, strlength(tradeListTitle), "\tAcc\tDrawdown");
 
   print("--------------------------------------------------------------------------------------------------------------------------");
-  print(tradeLogListTitle);
+  print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
   for (integer i=0; i<sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
