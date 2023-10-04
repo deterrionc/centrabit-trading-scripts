@@ -465,7 +465,6 @@ float backtest() {
 
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
   transaction transForTest[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
-  integer transForTestLength = sizeof(transForTest);
 
   for (integer i = 0; i < ATRLENGTH; i++) {
     transaction tempTrans[];
@@ -509,8 +508,8 @@ float backtest() {
 
   print("Initial EMA :" + toString(ema));
   print("Initial ATR :" + toString(atr));
-  print("Initial keltnerUpperBand :" + toString(upperBand));
-  print("Initial keltnerLowerBand :" + toString(lowerBand));
+  print("Initial Keltner UpperBand :" + toString(upperBand));
+  print("Initial Keltner LowerBand :" + toString(lowerBand));
   print("--------------   Running   -------------------");
 
   integer cnt = sizeof(transForTest);
