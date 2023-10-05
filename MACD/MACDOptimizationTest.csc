@@ -58,21 +58,13 @@ float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 string  tradeLogList[];
-
-# Additional needs in backtest mode
-float   minFillOrderPercentage = 0.0;
-float   maxFillOrderPercentage = 0.0;
+transaction transForTest[];
 
 integer FASTPERIOD      = 12;
 integer SLOWPERIOD      = 26;
 integer SIGNALPERIOD    = 9;
 string  RESOL           = "1h";
 
-transaction transForTest[];
-
-# Starting MACD algo
-setCurrentChartsExchange(EXCHANGESETTING);
-setCurrentChartsSymbol(SYMBOLSETTING);
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
@@ -145,8 +137,6 @@ void onPubOrderFilledTest(transaction t) {
   float lastHistogram = histogram;
   histogram = macd - signal;
 
-  setCurrentChartPosition("0");
-
   if (histogram > 0.0 && lastHistogram <= 0.0) { # buy signal
     currentOrderId++;
     print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
@@ -155,7 +145,7 @@ void onPubOrderFilledTest(transaction t) {
     transaction filledTran;
     filledTran.id = currentOrderId;
     filledTran.marker = currentOrderId;
-    filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+    filledTran.price = t.price;
     filledTran.amount = AMOUNT;
     filledTran.fee = AMOUNT * t.price * FEE * 0.01;
     filledTran.tradeTime = t.tradeTime;
@@ -176,7 +166,7 @@ void onPubOrderFilledTest(transaction t) {
     transaction filledTran;
     filledTran.id = currentOrderId;
     filledTran.marker = currentOrderId;
-    filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+    filledTran.price = t.price;
     filledTran.amount = AMOUNT;
     filledTran.fee = AMOUNT * t.price * FEE * 0.01;
     filledTran.tradeTime = t.tradeTime;
@@ -202,28 +192,7 @@ float backtest() {
   integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
   integer currentTime = getCurrentTime();
 
-
   bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
-
-  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
-  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
-
-  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-
-
-  minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
-  maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;
-  if (AMOUNT < 10.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.999;
-  } else if (AMOUNT <100.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.998;
-  } else if (AMOUNT < 1000.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  } else {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  }
-
   currentOrderId = 0;
 
   float barPrices[];
@@ -272,8 +241,6 @@ float backtest() {
   integer timecounter = 0;
   delete tradeLogList;
 
-  setChartsPairBuffering(true);
-
   for (integer i = 0; i < cnt; i++) {
     if (transForTest[i].tradeTime < timestampToStartLast24Hours) {
       updateTicker = i % step;
@@ -294,12 +261,11 @@ float backtest() {
       if (sellCount != buyCount) {
         transaction t;
         currentOrderId++;
-        setCurrentChartPosition("0");
         if (prevPosition == "long") { # sell order emulation
           print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
           t.tradeTime = transForTest[i].tradeTime;
@@ -310,7 +276,7 @@ float backtest() {
           print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price + transForTest[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
           t.tradeTime = transForTest[i].tradeTime;
