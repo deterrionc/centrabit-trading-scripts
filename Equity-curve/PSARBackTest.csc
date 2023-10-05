@@ -24,8 +24,8 @@ float   AFSTEP          = 0.02;
 string  RESOL           = "1d";                     # Bar resolution
 float   BALANCE         = 100.0;                    # Backtest Balance
 float   AMOUNT          = 10.0;                     # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-03-01 00:00:00";    # Backtest start datetime
-string  ENDDATETIME     = "2023-06-01 00:00:00";    # Backtest end datetime
+string  STARTDATETIME   = "2023-07-01 00:00:00";    # Backtest start datetime
+string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
 float   FEE             = 0.002;                    # trading fee as a decimal (0.2%)
 #############################################

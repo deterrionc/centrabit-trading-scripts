@@ -30,14 +30,13 @@ string  RESOLSTART      = "6h";
 string  RESOLEND        = "12h";
 string  RESOLSTEP       = "6h";
 float   AMOUNT          = 1.0;                      # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-03-01 00:00:00";    # Backtest start datetime
+string  STARTDATETIME   = "2023-07-01 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
 float   FEE             = 0.002;                    # trading fee as a decimal (0.2%)
-
 #############################################
 
-# Past days' prices
+# PSAR Variables
 float   highs[];
 float   lows[];
 float   psar;
@@ -47,6 +46,8 @@ float   af;
 float   AFINIT;
 float   AFMAX;
 float   AFSTEP;
+
+# Trading Variables
 string  RESOL;
 integer currentOrderId  = 0;
 integer buyCount        = 0;
@@ -61,15 +62,11 @@ float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 # Additional needs in backtest mode
 float   minFillOrderPercentage = 0.0;
 float   maxFillOrderPercentage = 0.0;
-
 boolean reversed;
-
 bar barData[];
 integer resolution;
 integer barSize;
@@ -79,14 +76,10 @@ void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
-  if (t.isAsk == false) {                # when sell order fillend
+  if (t.isAsk == false) {                   # when sell order fillend
     sellTotal += amount;
-    baseCurrencyBalance -= AMOUNT;
-    quoteCurrencyBalance += amount;
-  } else {                                 # when buy order fillend
+  } else {                                  # when buy order fillend
     buyTotal += amount;
-    baseCurrencyBalance += AMOUNT;
-    quoteCurrencyBalance -= amount;
   }
 
   integer isOddOrder = t.marker % 2;
@@ -260,10 +253,7 @@ float backtest() {
   lossCount = 0;
   entryAmount = 0.0;
   entryFee = 0.0;
-
   delete tradeLogList;
-  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
   resolution = interpretResol(RESOL);
   barSize = resolution * 60 * 1000 * 1000;

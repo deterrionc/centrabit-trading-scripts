@@ -18,7 +18,7 @@ import "library.csh";
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 string  RESOL           = "1h";                    # Bar resolution
-string  STARTDATETIME   = "2023-03-01 00:00:00";   # Backtest start datetime
+string  STARTDATETIME   = "2023-07-01 00:00:00";   # Backtest start datetime
 string  ENDDATETIME     = "now";                   # Backtest end datetime
 integer PERIOD          = 14;
 float   STOPLOSSAT      = 0.05;

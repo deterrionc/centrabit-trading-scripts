@@ -23,7 +23,7 @@ float   AFMAX           = 0.2;
 float   AFSTEP          = 0.02;
 string  RESOL           = "1d";                     # Bar resolution
 float   AMOUNT          = 1.0;                      # The amount of buy or sell order at once
-string  STARTDATETIME   = "2023-06-14 00:00:00";    # Backtest start datetime
+string  STARTDATETIME   = "2023-07-01 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
 float   FEE             = 0.002;                    # trading fee as a decimal (0.2%)
@@ -432,7 +432,6 @@ void backtest() {
 
   order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
   order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-
 
   minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
   maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;

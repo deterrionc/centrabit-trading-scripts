@@ -30,7 +30,7 @@ string RESOLUTION = "6h";
 
 float   AMOUNT          = 1.0;               # The amount of buy or sell order at once
 
-string  STARTDATETIME   = "2023-03-01 00:00:00";   # Backtest start datetime
+string  STARTDATETIME   = "2023-07-01 00:00:00";   # Backtest start datetime
 string  ENDDATETIME     = "now";                     # Backtest end datetime
 
 float PROFITBASE = 0.0001;                      # profit base

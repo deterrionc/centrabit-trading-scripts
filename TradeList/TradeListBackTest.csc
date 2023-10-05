@@ -43,8 +43,8 @@ float tradeDrawdownPrice = 0.0;
 float accProfit = 0.0;
 
 # Fetching the historical trading data of given datatime period
-string  STARTDATETIME   = "2023-03-01 00:00:00";   
-string ENDDATETIME = "2023-04-01 00:00:00";
+string  STARTDATETIME   = "2023-07-01 00:00:00";   
+string ENDDATETIME = "now";
 integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
 integer testEndTime = stringToTime(ENDDATETIME, "yyyy-MM-dd hh:mm:ss");
 integer testTimeLength = testEndTime - testStartTime;
