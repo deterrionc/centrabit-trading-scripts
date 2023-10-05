@@ -25,3 +25,38 @@ string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                    # expectancy base
 float   FEE             = 0.002;                  # trading fee as a decimal (0.2%)
 #############################################
+
+# Stochastic Variables
+float stocValue = 0.0;
+transaction transactions[];
+
+# Trading Variables
+string  position        = "flat";
+string  prevPosition    = "";
+integer resolution      = interpretResol(RESOL);
+integer currentOrderId  = 0;
+integer buyCount        = 0;
+integer sellCount       = 0;
+integer winCount        = 0;
+integer lossCount       = 0;
+float   buyTotal        = 0.0;
+float   sellTotal       = 0.0;
+float   totalWin        = 0.0;
+float   totalLoss       = 0.0;
+float   feeTotal        = 0.0;
+float   entryAmount     = 0.0;
+float   entryFee        = 0.0;
+string  tradeLogList[];
+
+# Additional needs in backtest mode
+string  profitSeriesColor       = "green";
+string  tradeSign               = "";
+integer profitSeriesID          = 0;
+transaction currentTran;
+transaction entryTran;
+
+void updateStocParams(transaction t) {
+  delete transactions[0];
+  transactions >> t;
+  stocValue = getStocValue();
+}
