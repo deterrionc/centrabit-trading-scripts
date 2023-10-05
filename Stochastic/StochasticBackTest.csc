@@ -62,7 +62,17 @@ void updateStocParams(transaction t) {
   stocValue = getStocValue(stocPrices);
 }
 
+void onPubOrderFilledTest(transaction t) {
+  if (stocValue >= 80.0) {
+    print("SELL");
+  }
 
+  if (stocValue <= 20.0) {
+    print("BUY");
+  }
+
+  updateStocParams(t);
+}
 
 float backtest() {
   print("^^^^^^^^ Stochastic Oscillator Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^\n");
@@ -81,5 +91,22 @@ float backtest() {
   if (testTimeLength > 31536000000000) { # maximum backtest available length is 1 year = 365  * 24 * 60 * 60 * 1000000 ns
     print("You exceeded the maximum backtest period.\nPlease try again with another STARTDATETIME setting");
     return;
+  }
+
+  print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
+  transaction transForTest[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
+
+  for (integer i = 0; i < STOCLENGTH; i++) {
+    stocPrices >> transForTest[i].price;
+  }
+
+  stocValue = getStocValue(stocPrices);
+
+  print("Initial Stochastic Oscillator K :" + toString(stocValue));
+  print("--------------   Running   -------------------");
+
+  currentOrderId = 0;
+  for (integer i = STOCLENGTH; i < sizeof(transForTest); i++) {
+    onPubOrderFilledTest(transForTest[i]);
   }
 }
