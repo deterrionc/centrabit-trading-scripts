@@ -458,7 +458,7 @@ float backtest() {
 
   # Checking Maximum Back Test Period
   integer testTimeLength = testEndTime - testStartTime;
-  if (testTimeLength >  31536000000000) { # maximum backtest available length is 1 year = 365  * 24 * 60 * 60 * 1000000 ns
+  if (testTimeLength > 31536000000000) { # maximum backtest available length is 1 year = 365  * 24 * 60 * 60 * 1000000 ns
     print("You exceeded the maximum backtest period.\nPlease try again with another STARTDATETIME setting");
     return;
   }
