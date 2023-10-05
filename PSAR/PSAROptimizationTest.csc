@@ -321,14 +321,13 @@ float backtest() {
     }
   }
 
-  print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
+  # print("DateTime: " + timeToString(barData[2].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
 
   float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
   float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
 
   order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
   order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-
 
   minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
   maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;
@@ -366,7 +365,7 @@ float backtest() {
 
         if (trend == "down") {
           currentOrderId++;
-          print(toString(currentOrderId) + " buy order (" + timeToString(lastTransaction.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(lastTransaction.price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Buy", lastTransaction.tradeTime, lastTransaction.price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
           t.price = lastTransaction.price + lastTransaction.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
@@ -381,7 +380,7 @@ float backtest() {
         } 
         else {
           currentOrderId++;
-          print(toString(currentOrderId) + " sell order (" + timeToString(lastTransaction.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(lastTransaction.price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Sell", lastTransaction.tradeTime, lastTransaction.price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
           t.price = lastTransaction.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
@@ -541,17 +540,13 @@ string optimization() {
           paramSetNo ++;
           resolStr = toString(k);
           resolStr += RESOLSTARTUnitSymbol;
-          
           paramSet = "AFINIT : " + toString(i) + ", AFMAX : " + toString(j) + ", AFSTEP : " + toString(p) + ", RESOL : " + resolStr;
-
           AFINIT = i;
           AFMAX = j;
           AFSTEP = p;
           RESOL = resolStr;
-
           print("------------------- Backtest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
           profit = backtest();
-          
           profitResult >> profit;
           paramSetResult >> paramSet;
           msleep(100);
@@ -569,19 +564,16 @@ string optimization() {
   }
 
   print(" ");
-
   print("================= Total optimization test result =================");
-
   print(" ");
+
   for (integer k=0; k< sizeof(paramSetResult); k++) {
     paramSetResult[k] = paramSetResult[k] + ", Profit : " + toString(profitResult[k]);
     print(paramSetResult[k]);
   }
 
   print("---------------- The optimized param set --------------");
-
   print(paramSetResult[best]);
-
   print("-------------------------------------------------------");
   print(" ");
   print("===========================================================");
