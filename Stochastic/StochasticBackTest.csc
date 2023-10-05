@@ -50,9 +50,9 @@ float   entryFee        = 0.0;
 string  tradeLogList[];
 
 # Additional needs in backtest mode
-string  profitSeriesColor       = "green";
-string  tradeSign               = "";
-integer profitSeriesID          = 0;
+string  profitSeriesColor  = "green";
+string  tradeSign          = "";
+integer profitSeriesID     = 0;
 transaction currentTran;
 transaction entryTran;
 
@@ -63,6 +63,8 @@ void updateStocParams(transaction t) {
 }
 
 void onPubOrderFilledTest(transaction t) {
+  updateStocParams(t);
+
   if (stocValue >= 80.0) {
     print("SELL");
   }
@@ -70,43 +72,45 @@ void onPubOrderFilledTest(transaction t) {
   if (stocValue <= 20.0) {
     print("BUY");
   }
-
-  updateStocParams(t);
 }
 
 float backtest() {
   print("^^^^^^^^ Stochastic Oscillator Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^\n");
-  integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
-  integer testEndTime;
-  integer currentTime = getCurrentTime();
+  # integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
+  # integer testEndTime;
+  # integer currentTime = getCurrentTime();
+# 
+  # if (ENDDATETIME == "now") {
+  #   testEndTime = currentTime;
+  # } else {
+  #   testEndTime = stringToTime(ENDDATETIME, "yyyy-MM-dd hh:mm:ss");
+  # }
 
-  if (ENDDATETIME == "now") {
-    testEndTime = currentTime;
-  } else {
-    testEndTime = stringToTime(ENDDATETIME, "yyyy-MM-dd hh:mm:ss");
-  }
+  # # Checking Maximum Back Test Period
+  # integer testTimeLength = testEndTime - testStartTime;
+  # if (testTimeLength > 31536000000000) { # maximum backtest available length is 1 year = 365  * 24 * 60 * 60 * 1000000 ns
+  #   print("You exceeded the maximum backtest period.\nPlease try again with another STARTDATETIME setting");
+  #   return;
+  # }
+# 
+  # print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
+  # transaction transForTest[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
+# 
+  # for (integer i = 0; i < STOCLENGTH; i++) {
+  #   stocPrices >> transForTest[i].price;
+  # }
+# 
+  # stocValue = getStocValue(stocPrices);
+# 
+  # print("Initial Stochastic Oscillator K :" + toString(stocValue));
+  # print("--------------   Running   -------------------");
+# 
+  # currentOrderId = 0;
+  # for (integer i = STOCLENGTH; i < sizeof(transForTest); i++) {
+  #   onPubOrderFilledTest(transForTest[i]);
+  # }
 
-  # Checking Maximum Back Test Period
-  integer testTimeLength = testEndTime - testStartTime;
-  if (testTimeLength > 31536000000000) { # maximum backtest available length is 1 year = 365  * 24 * 60 * 60 * 1000000 ns
-    print("You exceeded the maximum backtest period.\nPlease try again with another STARTDATETIME setting");
-    return;
-  }
-
-  print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
-  transaction transForTest[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
-
-  for (integer i = 0; i < STOCLENGTH; i++) {
-    stocPrices >> transForTest[i].price;
-  }
-
-  stocValue = getStocValue(stocPrices);
-
-  print("Initial Stochastic Oscillator K :" + toString(stocValue));
-  print("--------------   Running   -------------------");
-
-  currentOrderId = 0;
-  for (integer i = STOCLENGTH; i < sizeof(transForTest); i++) {
-    onPubOrderFilledTest(transForTest[i]);
-  }
+  return sellTotal - buyTotal;
 }
+
+backtest();

@@ -344,7 +344,7 @@ void printFillLogs(transaction t, string totalProfit) {
 #       Most recent trading prices
 #  @return
 #       Stochastic Oscillator Value
-void getStocValue(float[] data) {
+float getStocValue(float[] data) {
   integer dataLength = sizeof(data);
   float recentPrice = data[dataLength - 1];
   float lowest = fminInArray(data);
