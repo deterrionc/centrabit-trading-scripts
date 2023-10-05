@@ -68,7 +68,7 @@ void main() {
 
   string accProfit;
   string expectancy;
-  for (integer i=0; i<sizeof(SCRIPTS); i++) {
+  for (integer i = 0; i < sizeof(SCRIPTS); i++) {
     print(SCRIPTS[i] + " is running...");
     runScript(SCRIPTS[i]);
     waitForFinished(SCRIPTS[i]);
@@ -93,7 +93,7 @@ void main() {
   print("===============================================================================================");
   integer resultIndex = 0;
   string resultText = "";
-  for (integer i=0; i<sizeof(SCRIPTS); i++) {
+  for (integer i = 0; i < sizeof(SCRIPTS); i++) {
     if (accProfitList[resultIndex] >= PROFITBASE && expectancyList[resultIndex] >= EXPECTANCYBASE) {
       resultText = "PASS";
     } else {

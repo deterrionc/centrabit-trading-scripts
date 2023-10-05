@@ -24,7 +24,7 @@ integer PERIOD          = 14;
 float   STOPLOSSAT      = 0.05;
 float   AMOUNT          = 1.0;                     # The amount of buy or sell order at once
 float   EXPECTANCYBASE  = 0.1;                     # expectancy base
-float   FEE             = 0.01;                    # taker fee in percentage
+float   FEE             = 0.002;                   # trading fee as a decimal (0.2%)
 #############################################
 
 # Trading Variables
@@ -136,7 +136,7 @@ void onOwnOrderFilledTest(transaction t) {
   if (isOddOrder == 0) {
     print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
@@ -409,7 +409,7 @@ void backtest() {
 
   bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, PERIOD, resolution * 60 * 1000 * 1000);
 
-  for (integer i=1; i < sizeof(barData); i++) {
+  for (integer i = 1; i < sizeof(barData); i++) {
     priceChange = barData[i].closePrice - barData[i-1].closePrice;
     if (priceChange > 0.0) {
         gain += priceChange;
@@ -590,7 +590,7 @@ void backtest() {
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print(" ");

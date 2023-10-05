@@ -27,7 +27,7 @@ string  ENDDATETIME     = "now";                  # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                   # Stoploss as fraction of price
 boolean USETRAILINGSTOP = false;                  # Trailing stop flag
 float   EXPECTANCYBASE  = 0.1;                    # expectancy base
-float   FEE             = 0.002;                  # taker fee in percentage
+float   FEE             = 0.002;                  # trading fee as a decimal (0.2%)
 #############################################
 
 # Keltner Variables
@@ -311,7 +311,7 @@ void onPubOrderFilledTest(transaction t) {
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
     }
     if (position == "short") {        # Sold -> Buy
-      print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT) + "  @@@ StopLoss order @@@");
+      printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
       sellStopped = true;
       # Emulate Buy Order
       transaction filledTran;
@@ -594,7 +594,7 @@ float backtest() {
   print("\n\n-----------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("-----------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print("-----------------------------------------------------------------------------------------------------------------------\n");

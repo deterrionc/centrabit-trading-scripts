@@ -127,7 +127,7 @@ void main() {
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
 
-  for (integer i=0; i<sizeof(txAmount); i++) {
+  for (integer i = 0; i < sizeof(txAmount); i++) {
     float minusTotalBaseTraded = 0.0 - totalBaseTraded;
     # print("Current Tx Amount " + toString(txAmount[i]) + ", baseTraded: " + toString(totalBaseTraded));
     if (totalBaseTraded == 0.0) {

@@ -290,7 +290,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
   if (isOddOrder == 0) {
     printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;

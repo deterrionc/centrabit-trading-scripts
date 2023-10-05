@@ -26,7 +26,7 @@ float   AMOUNT          = 1.0;                      # The amount of buy or sell 
 string  STARTDATETIME   = "2023-06-14 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
-float   FEE             = 0.002;                    # taker fee in percentage
+float   FEE             = 0.002;                    # trading fee as a decimal (0.2%)
 #############################################
 
 # PSAR Variables
@@ -459,7 +459,7 @@ void backtest() {
 
   setChartsPairBuffering(true);
 
-  for (integer i=3; i<sizeof(barData); i++) {
+  for (integer i = 3; i < sizeof(barData); i++) {
     onTimeOutTest(i);
     if (i == sizeof(barData)-1) {
       shouldBePositionClosed = currentOrderId % 2;
@@ -549,7 +549,7 @@ void backtest() {
   print("\n--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print("--------------------------------------------------------------------------------------------------------------------------\n");

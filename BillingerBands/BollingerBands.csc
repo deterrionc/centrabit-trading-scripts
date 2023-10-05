@@ -448,7 +448,7 @@ void main() {
   integer resolution = interpretResol(RESOL);
 
   bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, 0, SMALEN, resolution * 60 * 1000 * 1000);
-  for (integer i=0; i<sizeof(barsInPeriod); i++) {
+  for (integer i = 0; i < sizeof(barsInPeriod); i++) {
     barPriceInSMAPeriod >> barsInPeriod[i].closePrice;
   }
   setCurrentChartsExchange(EXCHANGESETTING);

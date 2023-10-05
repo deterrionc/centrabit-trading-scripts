@@ -210,7 +210,7 @@ void main() {
   setChartDataTitle(exchange1);
   setCurrentSeriesName(exchange1);
   configureLine(true, "#98D2EB", 1.0);
-  for (integer i=0; i<sizeof(exchange1Trans); i++) {
+  for (integer i = 0; i < sizeof(exchange1Trans); i++) {
     drawChartPriceLine("1", exchange1, exchange1Trans[i].tradeTime, exchange1Trans[i].price);
   }
 
@@ -218,7 +218,7 @@ void main() {
   setChartDataTitle(exchange2);
   setCurrentSeriesName(exchange2);
   configureLine(true, "#77625C", 1.0);
-  for (integer i=0; i<sizeof(exchange2Trans); i++) {
+  for (integer i = 0; i < sizeof(exchange2Trans); i++) {
     drawChartPriceLine("2", exchange2, exchange2Trans[i].tradeTime, exchange2Trans[i].price);
   }
 

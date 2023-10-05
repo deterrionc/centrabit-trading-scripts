@@ -26,7 +26,7 @@ string  STARTDATETIME   = "2023-07-02 00:00:00";            # Backtest start dat
 string  ENDDATETIME     = "now";                            # Backtest end datetime
 float   STOPLOSSAT      = 0.05;                             # Stoploss as fraction of price
 float   EXPECTANCYBASE  = 0.1;                              # expectancy base
-float   FEE             = 0.002;                            # taker fee in percentage
+float   FEE             = 0.002;                            # trading fee as a decimal (0.2%)
 boolean USETRAILINGSTOP = false;                            # Trailing stop flag
 string  logFilePath     = "c:/bbtest_log_tradelist_";       # Please make sure this path any drive except C:
 #############################################
@@ -495,7 +495,7 @@ void backtest() {
 
   print("Preparing Bars in Period...");
   bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SMALEN, resolution * 60 * 1000 * 1000);
-  for (integer i=0; i<sizeof(barsInPeriod); i++) {
+  for (integer i = 0; i < sizeof(barsInPeriod); i++) {
     smaPrices >> barsInPeriod[i].closePrice;
   }
 
@@ -626,7 +626,7 @@ void backtest() {
   fwrite(logFile, ",Trade,Time," + SYMBOLSETTING + ",," + getBaseCurrencyName(SYMBOLSETTING) + "(per),Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,\n");
 
   string logline;
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
     logline = strreplace(tradeLogList[i], "\t", ",");
     logline += "\n";

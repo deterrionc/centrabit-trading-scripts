@@ -33,7 +33,7 @@ float   AMOUNT          = 1.0;                      # The amount of buy or sell 
 string  STARTDATETIME   = "2023-03-01 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
-float   FEE             = 0.01;                     # taker fee in percentage
+float   FEE             = 0.002;                    # trading fee as a decimal (0.2%)
 
 #############################################
 
@@ -96,7 +96,7 @@ void onOwnOrderFilledTest(transaction t) {
   if (isOddOrder == 0) {
     print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog =  tradeLog + " ";
     }
     float profit;
@@ -365,7 +365,7 @@ float backtest() {
 
   setChartsPairBuffering(true);
 
-  for (integer i=3; i<sizeof(barData); i++) {
+  for (integer i = 3; i < sizeof(barData); i++) {
     onTimeOutTest(i);
     if (i == sizeof(barData)-1) {
       shouldBePositionClosed = currentOrderId % 2;
@@ -445,7 +445,7 @@ float backtest() {
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print(" ");

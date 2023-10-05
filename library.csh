@@ -164,7 +164,7 @@ integer interpretResol(string symbol) {
 integer minInArray(integer[] data) {
   integer m = data[0];
 
-  for (integer i=1; i<sizeof(data); i++) {
+  for (integer i = 1; i < sizeof(data); i++) {
     if (data[i] < m)
       m = data[i];
   }
@@ -181,7 +181,7 @@ integer minInArray(integer[] data) {
 integer maxInArray(integer[] data) {
   integer m = data[0];
 
-  for (integer i=1; i<sizeof(data); i++) {
+  for (integer i = 1; i < sizeof(data); i++) {
     if (data[i] > m)
       m = data[i];
   }
@@ -198,7 +198,7 @@ integer maxInArray(integer[] data) {
 float fminInArray(float[] data) {
   float m = data[0];
 
-  for (integer i=1; i<sizeof(data); i++) {
+  for (integer i = 1; i < sizeof(data); i++) {
     if (data[i] < m)
       m = data[i];
   }
@@ -215,7 +215,7 @@ float fminInArray(float[] data) {
 float fmaxInArray(float[] data) {
   float m = data[0];
 
-  for (integer i=1; i<sizeof(data); i++) {
+  for (integer i = 1; i < sizeof(data); i++) {
     if (data[i] > m)
       m = data[i];
   }
@@ -238,7 +238,7 @@ bar generateBar(transaction[] data) {
   }
 
   float prices[];
-  for (integer i=0; i<sizeof(data); i++) {
+  for (integer i = 0; i < sizeof(data); i++) {
     prices >> data[i].price;
   }
   

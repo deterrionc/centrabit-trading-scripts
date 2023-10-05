@@ -26,7 +26,7 @@ float   AMOUNT          = 1.0;                      # The amount of buy or sell 
 string  STARTDATETIME   = "2023-04-03 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
 float   EXPECTANCYBASE  = 0.1;                      # expectancy base
-float   FEE             = 0.002;                    # taker fee in percentage
+float   FEE             = 0.002;                    # trading fee as a decimal (0.2%)
 #############################################
 
 # MACD Variables
@@ -550,7 +550,7 @@ void backtest() {
   print("\n-----------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("-----------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
 

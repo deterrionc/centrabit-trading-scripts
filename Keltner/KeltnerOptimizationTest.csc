@@ -27,7 +27,7 @@ string  RESOLSTART          = "1h";
 string  RESOLEND            = "1h";
 string  RESOLSTEP           = "1h";
 float   EXPECTANCYBASE      = 0.1;                     # expectancy base
-float   FEE                 = 0.01;                    # taker fee in percentages
+float   FEE                 = 0.002;                   # trading fee as a decimal (0.2%)s
 float   AMOUNT              = 1.0;                     # The amount of buy or sell order at once
 string  STARTDATETIME       = "2023-07-04 00:00:00";   # Backtest start datetime
 string  ENDDATETIME         = "now";                   # Backtest end datetime
@@ -89,7 +89,7 @@ void onOwnOrderFilledTest(transaction t) {
   if (isOddOrder == 0) {
     printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
@@ -422,7 +422,7 @@ float backtest() {
   print("\n--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print("\n--------------------------------------------------------------------------------------------------------------------------");

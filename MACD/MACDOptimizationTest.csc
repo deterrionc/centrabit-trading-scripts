@@ -1,6 +1,5 @@
 # MACD trading strategy optimization test 2.1.0 - Copyright(C) 2023 Centrabit.com ( Author: smartalina0915@gmail.com )
 
-# QTScript name definition
 # Script Name
 script MACDOptimizationTest;
 
@@ -14,44 +13,38 @@ import Charts;
 import "library.csh";
 
 #############################################
-# User settings
-
-string  EXCHANGESETTING = "Centrabit";
-string  SYMBOLSETTING   = "LTC/BTC";
-
-integer FASTPERIODSTART = 12;
-integer FASTPERIODEND = 12;
-integer FASTPERIODSTEP = 1;
-integer SLOWPERIODSTART = 26;
-integer SLOWPERIODEND = 26;
-integer SLOWPERIODSTEP = 1;
+# User Settings
+string  EXCHANGESETTING   = "Centrabit";
+string  SYMBOLSETTING     = "LTC/BTC";
+integer FASTPERIODSTART   = 12;
+integer FASTPERIODEND     = 12;
+integer FASTPERIODSTEP    = 1;
+integer SLOWPERIODSTART   = 26;
+integer SLOWPERIODEND     = 26;
+integer SLOWPERIODSTEP    = 1;
 integer SIGNALPERIODSTART = 9;
-integer SIGNALPERIODEND = 11;
-integer SIGNALPERIODSTEP = 1;
-
-string RESOLSTART = "1d";
-string RESOLEND = "1d";
-string RESOLSTEP = "1d";
-
-float   AMOUNT          = 10.0;               # The amount of buy or sell order at once
-
-string  STARTDATETIME   = "2023-03-01 00:00:00";   # Backtest start datetime
-string  ENDDATETIME     = "now";     # Backtest end datetime
-
-float   EXPECTANCYBASE  = 0.1;                     # expectancy base
-float   FEE             = 0.01;                               # taker fee in percentage
-
+integer SIGNALPERIODEND   = 11;
+integer SIGNALPERIODSTEP  = 1;
+string  RESOLSTART        = "1d";
+string  RESOLEND          = "1d";
+string  RESOLSTEP         = "1d";
+float   AMOUNT            = 10.0;                       # The amount of buy or sell order at once
+string  STARTDATETIME     = "2023-03-01 00:00:00";      # Backtest start datetime
+string  ENDDATETIME       = "now";                      # Backtest end datetime
+float   EXPECTANCYBASE    = 0.1;                        # expectancy base
+float   FEE               = 0.002;                      # trading fee as a decimal (0.2%)
 #############################################
 
+# MACD Variables
 float   fastEMA         = 0.0;
 float   slowEMA         = 0.0;
 float   macd            = 0.0;
 float   signal          = 0.0;
 float   histogram       = 0.0;
 
+# Trading Variables
 string  position        = "flat";
 string  prevPosition    = "";    # "", "long", "short"
-
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
@@ -64,28 +57,13 @@ float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-
 string  tradeLogList[];
-float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
-
-# Additional needs in backtest mode
-float   minFillOrderPercentage = 0.0;
-float   maxFillOrderPercentage = 0.0;
+transaction transForTest[];
 
 integer FASTPERIOD      = 12;
 integer SLOWPERIOD      = 26;
 integer SIGNALPERIOD    = 9;
 string  RESOL           = "1h";
-
-transaction transForTest[];
-
-# Drawable flag
-boolean drawable = false;
-
-# Starting MACD algo
-setCurrentChartsExchange(EXCHANGESETTING);
-setCurrentChartsSymbol(SYMBOLSETTING);
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
@@ -93,12 +71,8 @@ void onOwnOrderFilledTest(transaction t) {
 
   if (t.isAsk == false) {                # when sell order fillend
     sellTotal += amount;
-    baseCurrencyBalance -= AMOUNT;
-    quoteCurrencyBalance += amount;
   } else {                                 # when buy order fillend
     buyTotal += amount;
-    baseCurrencyBalance += AMOUNT;
-    quoteCurrencyBalance -= amount;
   }
 
   integer isOddOrder = t.marker % 2;
@@ -106,18 +80,18 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
     if (t.isAsk == false) {
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog = "\tLX  ";
+      tradeLog = "\tLX\t";
     } else {
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog = "\tSX  ";
+      tradeLog = "\tSX\t";
     }
 
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
@@ -132,7 +106,7 @@ void onOwnOrderFilledTest(transaction t) {
     }
     tradeLogList >> tradeLog;
   } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
     tradeLog +=  toString(tradeNumber);
     if (t.isAsk == false) {
       tradeLog += "\tSE\t";
@@ -162,17 +136,15 @@ void onPubOrderFilledTest(transaction t) {
   float lastHistogram = histogram;
   histogram = macd - signal;
 
-  setCurrentChartPosition("0");
-
   if (histogram > 0.0 && lastHistogram <= 0.0) { # buy signal
     currentOrderId++;
-    print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+    printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
  
     # emulating buy order filling
     transaction filledTran;
     filledTran.id = currentOrderId;
     filledTran.marker = currentOrderId;
-    filledTran.price = t.price + t.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+    filledTran.price = t.price;
     filledTran.amount = AMOUNT;
     filledTran.fee = AMOUNT * t.price * FEE * 0.01;
     filledTran.tradeTime = t.tradeTime;
@@ -184,20 +156,16 @@ void onPubOrderFilledTest(transaction t) {
     }
     position = "long";
     buyCount ++;
-    
-    if (drawable) {
-      drawChartPointToSeries("Buy", t.tradeTime, t.price);
-    }   
   }
   if (histogram < 0.0 && lastHistogram >= 0.0) { # sell signal
     currentOrderId++;
-    print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+    printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
 
     # emulating sell order filling
     transaction filledTran;
     filledTran.id = currentOrderId;
     filledTran.marker = currentOrderId;
-    filledTran.price = t.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+    filledTran.price = t.price;
     filledTran.amount = AMOUNT;
     filledTran.fee = AMOUNT * t.price * FEE * 0.01;
     filledTran.tradeTime = t.tradeTime;
@@ -210,18 +178,6 @@ void onPubOrderFilledTest(transaction t) {
     
     position = "short";
     sellCount ++;
-
-    if (drawable) {
-      drawChartPointToSeries("Sell", t.tradeTime, t.price);  
-    } 
-  }
-
-  if (drawable) {
-    drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
-    drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
-    setCurrentChartPosition("1");
-    drawChartPointToSeries("macd", t.tradeTime, (macd));
-    drawChartPointToSeries("signal", t.tradeTime, (signal));    
   }
 }
 
@@ -235,35 +191,14 @@ float backtest() {
   integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
   integer currentTime = getCurrentTime();
 
-
   bar barData[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SLOWPERIOD+SIGNALPERIOD, resolution * 60 * 1000 * 1000);
-
-  float minAskOrderPrice = getOrderBookAsk(EXCHANGESETTING, SYMBOLSETTING);
-  float maxBidOrderPrice = getOrderBookBid(EXCHANGESETTING, SYMBOLSETTING);
-
-  order askOrders[] = getOrderBookByRangeAsks(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-  order bidOrders[] = getOrderBookByRangeBids(EXCHANGESETTING, SYMBOLSETTING, 0.0, 1.0);
-
-
-  minFillOrderPercentage = bidOrders[0].price/askOrders[sizeof(askOrders)-1].price;
-  maxFillOrderPercentage = bidOrders[sizeof(bidOrders)-1].price/askOrders[0].price;
-  if (AMOUNT < 10.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.999;
-  } else if (AMOUNT <100.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.998;
-  } else if (AMOUNT < 1000.0) {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  } else {
-    minFillOrderPercentage = maxFillOrderPercentage * 0.997;
-  }
-
   currentOrderId = 0;
 
   float barPrices[];
   float macdBar[];
 
   # Calculating init values from the lookback data
-  for (integer i=0; i<sizeof(barData); i++) {
+  for (integer i = 0; i < sizeof(barData); i++) {
     barPrices >> barData[i].closePrice;
 
     if (i >= (FASTPERIOD-1)) {
@@ -305,8 +240,6 @@ float backtest() {
   integer timecounter = 0;
   delete tradeLogList;
 
-  setChartsPairBuffering(true);
-
   for (integer i = 0; i < cnt; i++) {
     if (transForTest[i].tradeTime < timestampToStartLast24Hours) {
       updateTicker = i % step;
@@ -327,43 +260,37 @@ float backtest() {
       if (sellCount != buyCount) {
         transaction t;
         currentOrderId++;
-        setCurrentChartPosition("0");
         if (prevPosition == "long") { # sell order emulation
-          print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Sell", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
           sellCount ++;
-          if (drawable)
-            drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else { # buy order emulation
-          print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
-          t.price = transForTest[i].price + transForTest[i].price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
+          t.price = transForTest[i].price;
           t.amount = AMOUNT;
           t.fee = AMOUNT*t.price*FEE * 0.01;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
           buyCount ++;
-          if (drawable)
-            drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
         }
       }
     }
 
     msleepFlag = i % 2000;
-    if ( msleepFlag == 0)
+    if ( msleepFlag == 0) {
       msleep(30);    
+    }
   }
-
-  setChartsPairBuffering(false);
 
   float rewardToRiskRatio = totalWin / totalLoss;
   float winLossRatio = toFloat(winCount) / toFloat(lossCount);
@@ -386,15 +313,12 @@ float backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
-
 
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print(" ");
@@ -407,7 +331,6 @@ float backtest() {
   print("@ Expectancy Base: " + toString(EXPECTANCYBASE));
   print(" ");
   print("Result : " + resultString);
-
   print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
   print("*****************************");
 
@@ -475,31 +398,6 @@ string optimization() {
   transForTest = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
 
   clearCharts();
-  setChartBarCount(10);
-  setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
-  setChartTime(transForTest[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
-  
-  setChartDataTitle("MACD");
-
-  setCurrentSeriesName("Sell");
-  configureScatter(true, "red", "red", 7.0);
-  setCurrentSeriesName("Buy");
-  configureScatter(true, "#7dfd63", "#187206", 7.0,);
-  setCurrentSeriesName("Direction");
-  configureLine(true, "green", 2.0);
-  setCurrentSeriesName("FastEMA");
-  configureLine(true, "pink", 2.0);
-  setCurrentSeriesName("SlowEMA");
-  configureLine(true, "#00ffff", 2.0);
-  
-  setCurrentChartPosition("1");
-  setChartDataTitle("MACD - " + toString(FASTPERIOD) + ", " + toString(SLOWPERIOD) + ", " + toString(SIGNALPERIOD));
-  setChartYRange(0.0, 0.0); 
-  
-  setCurrentSeriesName("macd");
-  configureLine(true, "blue", 2.0);
-  setCurrentSeriesName("signal");
-  configureLine(true, "red", 2.0);  
 
   for (integer i = FASTPERIODSTART; i <= FASTPERIODEND; i += FASTPERIODSTEP) {
     for (integer j = SLOWPERIODSTART; j <= SLOWPERIODEND; j += SLOWPERIODSTEP ) {
@@ -507,17 +405,13 @@ string optimization() {
         for (integer k = RESOLSTARTInt; k <= RESOLENDInt; k += RESOLSTEPInt) {
           paramSetNo ++;
           resolStr = toString(k) + RESOLSTARTUnitSymbol;
-          
           paramSet = "FASTPERIOD : " + toString(i) + ", SLOWPERIOD : " + toString(j) + ", SIGNALPERIOD : " + toString(p) + ", RESOL : " + resolStr;
-
           FASTPERIOD = i;
           SLOWPERIOD = j;
           SIGNALPERIOD = p;
           RESOL = resolStr;
-
           print("------------------- Bacttest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
           profit = backtest();
-          
           profitResult >> profit;
           paramSetResult >> paramSet;
           msleep(100);
@@ -535,19 +429,16 @@ string optimization() {
   }
 
   print(" ");
-
   print("================= Total optimization test result =================");
-
   print(" ");
+
   for (integer k=0; k< sizeof(paramSetResult); k++) {
     paramSetResult[k] = paramSetResult[k] + ", Profit : " + toString(profitResult[k]);
     print(paramSetResult[k]);
   }
 
   print("---------------- The optimized param set --------------");
-
   print(paramSetResult[best]);
-
   print("-------------------------------------------------------");
   print(" ");
   print("===========================================================");
