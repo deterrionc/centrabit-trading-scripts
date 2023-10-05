@@ -70,9 +70,6 @@ string  RESOL           = "1h";
 
 transaction transForTest[];
 
-# Drawable flag
-boolean drawable = false;
-
 # Starting MACD algo
 setCurrentChartsExchange(EXCHANGESETTING);
 setCurrentChartsSymbol(SYMBOLSETTING);
@@ -170,10 +167,6 @@ void onPubOrderFilledTest(transaction t) {
     }
     position = "long";
     buyCount ++;
-    
-    if (drawable) {
-      drawChartPointToSeries("Buy", t.tradeTime, t.price);
-    }   
   }
   if (histogram < 0.0 && lastHistogram >= 0.0) { # sell signal
     currentOrderId++;
@@ -196,18 +189,6 @@ void onPubOrderFilledTest(transaction t) {
     
     position = "short";
     sellCount ++;
-
-    if (drawable) {
-      drawChartPointToSeries("Sell", t.tradeTime, t.price);  
-    } 
-  }
-
-  if (drawable) {
-    drawChartPointToSeries("FastEMA", t.tradeTime, fastEMA); 
-    drawChartPointToSeries("SlowEMA", t.tradeTime, slowEMA); 
-    setCurrentChartPosition("1");
-    drawChartPointToSeries("macd", t.tradeTime, (macd));
-    drawChartPointToSeries("signal", t.tradeTime, (signal));    
   }
 }
 
@@ -325,8 +306,6 @@ float backtest() {
           t.isAsk = false;
           onOwnOrderFilledTest(t);
           sellCount ++;
-          if (drawable)
-            drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else { # buy order emulation
           print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
           t.id = currentOrderId;
@@ -338,8 +317,6 @@ float backtest() {
           t.isAsk = true;
           onOwnOrderFilledTest(t);
           buyCount ++;
-          if (drawable)
-            drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
         }
       }
     }
@@ -348,8 +325,6 @@ float backtest() {
     if ( msleepFlag == 0)
       msleep(30);    
   }
-
-  setChartsPairBuffering(false);
 
   float rewardToRiskRatio = totalWin / totalLoss;
   float winLossRatio = toFloat(winCount) / toFloat(lossCount);
@@ -461,31 +436,6 @@ string optimization() {
   transForTest = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
 
   clearCharts();
-  setChartBarCount(10);
-  setChartBarWidth(24 * 60 * 60 * 1000000);                                # 1 day 
-  setChartTime(transForTest[0].tradeTime +  9 * 24 * 60 * 60 * 1000000);      # 9 days
-  
-  setChartDataTitle("MACD");
-
-  setCurrentSeriesName("Sell");
-  configureScatter(true, "red", "red", 7.0);
-  setCurrentSeriesName("Buy");
-  configureScatter(true, "#7dfd63", "#187206", 7.0,);
-  setCurrentSeriesName("Direction");
-  configureLine(true, "green", 2.0);
-  setCurrentSeriesName("FastEMA");
-  configureLine(true, "pink", 2.0);
-  setCurrentSeriesName("SlowEMA");
-  configureLine(true, "#00ffff", 2.0);
-  
-  setCurrentChartPosition("1");
-  setChartDataTitle("MACD - " + toString(FASTPERIOD) + ", " + toString(SLOWPERIOD) + ", " + toString(SIGNALPERIOD));
-  setChartYRange(0.0, 0.0); 
-  
-  setCurrentSeriesName("macd");
-  configureLine(true, "blue", 2.0);
-  setCurrentSeriesName("signal");
-  configureLine(true, "red", 2.0);  
 
   for (integer i = FASTPERIODSTART; i <= FASTPERIODEND; i += FASTPERIODSTEP) {
     for (integer j = SLOWPERIODSTART; j <= SLOWPERIODEND; j += SLOWPERIODSTEP ) {
