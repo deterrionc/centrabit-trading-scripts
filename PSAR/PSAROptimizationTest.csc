@@ -87,7 +87,7 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
     for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog =  tradeLog + " ";
@@ -112,7 +112,7 @@ void onOwnOrderFilledTest(transaction t) {
     }
     tradeLogList >> tradeLog;
   } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
 
     tradeLog += toString(tradeNumber);
     if (t.isAsk == false) {
@@ -197,7 +197,7 @@ void onTimeOutTest(integer i) {
     }
   }
 
-  print("DateTime: " + timeToString(barData[i].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
+  # print("DateTime: " + timeToString(barData[i].timestamp, "yyyy-MM-dd hh:mm:ss") + ", High: " + toString(highs[1]) + ", Low: " + toString(lows[1]) + ", PSAR: " + toString(psar) + ", EP: " + toString(ep) + ", AF: " + toString(af) + ", Trend: " + trend);
 
   transaction barTransactions[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, barData[i].timestamp, barData[i].timestamp+barSize);
   transaction lastTransaction = barTransactions[0];
@@ -207,7 +207,7 @@ void onTimeOutTest(integer i) {
     drawChartPointToSeries("Upword", barData[i].timestamp, psar);
     if (oldTrend != "up") {
       currentOrderId++;
-      print(toString(currentOrderId) + " buy order (" + timeToString(lastTransaction.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(lastTransaction.price) + "  amount: "+ toString(AMOUNT));
+      printOrderLogs(currentOrderId, "Buy", lastTransaction.tradeTime, lastTransaction.price, AMOUNT, "");
       t.id = currentOrderId;
       t.marker = currentOrderId;
       t.price = lastTransaction.price + lastTransaction.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
@@ -224,7 +224,7 @@ void onTimeOutTest(integer i) {
     drawChartPointToSeries("Downward", barData[i].timestamp, psar);
     if (oldTrend != "down") {
       currentOrderId++;
-      print(toString(currentOrderId) + " sell order (" + timeToString(lastTransaction.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(lastTransaction.price) + "  amount: "+ toString(AMOUNT));
+      printOrderLogs(currentOrderId, "Sell", lastTransaction.tradeTime, lastTransaction.price, AMOUNT, "");
       t.id = currentOrderId;
       t.marker = currentOrderId;
       t.price = lastTransaction.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
@@ -455,7 +455,6 @@ float backtest() {
   return sellTotal - buyTotal - feeTotal;
 }
 
-
 string optimization() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
@@ -590,6 +589,5 @@ string optimization() {
 
   return paramSetResult[best];
 }
-
 
 optimization();
