@@ -88,10 +88,10 @@ void onOwnOrderFilledTest(transaction t) {
     float profit;
     if (t.isAsk == false) {
       profit = amount - entryAmount - t.fee - entryFee;
-      tradeLog = "\tLX  ";
+      tradeLog = "\tLX\t";
     } else {
       profit = entryAmount - amount - t.fee - entryFee;
-      tradeLog = "\tSX  ";
+      tradeLog = "\tSX\t";
     }
 
     tradeLog = tradeLog + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(t.amount) + "\t" + toString(profit) + "  \t" + toString(sellTotal - buyTotal - feeTotal);
