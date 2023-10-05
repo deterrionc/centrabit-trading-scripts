@@ -28,6 +28,7 @@ float   FEE             = 0.002;                  # trading fee as a decimal (0.
 
 # Stochastic Variables
 float stocValue = 0.0;
+float stocPrices[];
 transaction transactions[];
 
 # Trading Variables
@@ -56,7 +57,7 @@ transaction currentTran;
 transaction entryTran;
 
 void updateStocParams(transaction t) {
-  delete transactions[0];
-  transactions >> t;
-  stocValue = getStocValue();
+  delete stocPrices[0];
+  stocPrices >> t.price;
+  stocValue = getStocValue(stocPrices);
 }
