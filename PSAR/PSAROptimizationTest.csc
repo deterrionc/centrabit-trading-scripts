@@ -122,7 +122,7 @@ void onOwnOrderFilledTest(transaction t) {
     }
     entryAmount = amount;
     entryFee = t.fee;
-    tradeLog = tradeLog +  timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t" + toString(AMOUNT) + "\t\t\t" + toString(AMOUNT);
+    tradeLog = tradeLog +  timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "\t" + toString(t.price) + "\t\t" + toString(AMOUNT);
     tradeLogList >> tradeLog;
   }
 }
