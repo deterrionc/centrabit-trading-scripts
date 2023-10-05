@@ -80,7 +80,7 @@ void onOwnOrderFilledTest(transaction t) {
   string tradeLog = "   ";
 
   if (isOddOrder == 0) {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
+    printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
     for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
@@ -106,7 +106,7 @@ void onOwnOrderFilledTest(transaction t) {
     }
     tradeLogList >> tradeLog;
   } else {
-    print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee));
+    printFillLogs(t, "");
     tradeLog +=  toString(tradeNumber);
     if (t.isAsk == false) {
       tradeLog += "\tSE\t";
@@ -138,7 +138,7 @@ void onPubOrderFilledTest(transaction t) {
 
   if (histogram > 0.0 && lastHistogram <= 0.0) { # buy signal
     currentOrderId++;
-    print(toString(currentOrderId) + " buy order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+    printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
  
     # emulating buy order filling
     transaction filledTran;
@@ -159,7 +159,7 @@ void onPubOrderFilledTest(transaction t) {
   }
   if (histogram < 0.0 && lastHistogram >= 0.0) { # sell signal
     currentOrderId++;
-    print(toString(currentOrderId) + " sell order (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(t.price) + "  amount: "+ toString(AMOUNT));
+    printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
 
     # emulating sell order filling
     transaction filledTran;
@@ -198,7 +198,7 @@ float backtest() {
   float macdBar[];
 
   # Calculating init values from the lookback data
-  for (integer i=0; i<sizeof(barData); i++) {
+  for (integer i = 0; i < sizeof(barData); i++) {
     barPrices >> barData[i].closePrice;
 
     if (i >= (FASTPERIOD-1)) {
@@ -261,7 +261,7 @@ float backtest() {
         transaction t;
         currentOrderId++;
         if (prevPosition == "long") { # sell order emulation
-          print(toString(currentOrderId) + " sell order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Sell", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
@@ -272,7 +272,7 @@ float backtest() {
           onOwnOrderFilledTest(t);
           sellCount ++;
         } else { # buy order emulation
-          print(toString(currentOrderId) + " buy order (" + timeToString(transForTest[i].tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + "base price: " + toString(transForTest[i].price) + "  amount: "+ toString(AMOUNT));
+          printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id = currentOrderId;
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
@@ -318,7 +318,7 @@ float backtest() {
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print(" ");

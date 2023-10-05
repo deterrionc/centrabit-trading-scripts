@@ -459,7 +459,7 @@ void backtest() {
 
   setChartsPairBuffering(true);
 
-  for (integer i=3; i<sizeof(barData); i++) {
+  for (integer i = 3; i < sizeof(barData); i++) {
     onTimeOutTest(i);
     if (i == sizeof(barData)-1) {
       shouldBePositionClosed = currentOrderId % 2;
@@ -549,7 +549,7 @@ void backtest() {
   print("\n--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print("--------------------------------------------------------------------------------------------------------------------------\n");

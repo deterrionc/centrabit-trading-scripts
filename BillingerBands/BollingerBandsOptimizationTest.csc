@@ -89,7 +89,7 @@ void onOwnOrderFilledTest(transaction t) {
   if (isOddOrder == 0) {
     printFillLogs(t, toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
@@ -344,7 +344,7 @@ float backtest() {
 
   print("Preparing Bars in Period...");
   bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, SMALEN, resolution * 60 * 1000 * 1000);
-  for (integer i=0; i<sizeof(barsInPeriod); i++) {
+  for (integer i = 0; i < sizeof(barsInPeriod); i++) {
     smaPrices >> barsInPeriod[i].closePrice;
   }
 
@@ -510,7 +510,7 @@ float backtest() {
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
   print("--------------------------------------------------------------------------------------------------------------------------");
-  for (integer i=0; i<sizeof(tradeLogList); i++) {
+  for (integer i = 0; i < sizeof(tradeLogList); i++) {
     print(tradeLogList[i]);
   }
   print(" ");
