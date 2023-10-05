@@ -204,7 +204,6 @@ void onTimeOutTest(integer i) {
   transaction t;
 
   if (trend == "up") {
-    drawChartPointToSeries("Upword", barData[i].timestamp, psar);
     if (oldTrend != "up") {
       currentOrderId++;
       printOrderLogs(currentOrderId, "Buy", lastTransaction.tradeTime, lastTransaction.price, AMOUNT, "");
@@ -217,11 +216,8 @@ void onTimeOutTest(integer i) {
       t.isAsk = true;
       onOwnOrderFilledTest(t);
       buyCount ++;
-      drawChartPointToSeries("Buy", lastTransaction.tradeTime, lastTransaction.price);      
-      drawChartPointToSeries("Direction", lastTransaction.tradeTime, lastTransaction.price); 
     }
   } else {
-    drawChartPointToSeries("Downward", barData[i].timestamp, psar);
     if (oldTrend != "down") {
       currentOrderId++;
       printOrderLogs(currentOrderId, "Sell", lastTransaction.tradeTime, lastTransaction.price, AMOUNT, "");
@@ -234,8 +230,6 @@ void onTimeOutTest(integer i) {
       t.isAsk = false;
       onOwnOrderFilledTest(t);
       sellCount ++;
-      drawChartPointToSeries("Sell", lastTransaction.tradeTime, lastTransaction.price);
-      drawChartPointToSeries("Direction", lastTransaction.tradeTime, lastTransaction.price); 
     }
   }
 }
@@ -343,16 +337,8 @@ float backtest() {
 
   currentOrderId = 0;
 
-  if (trend == "up") {
-    drawChartPointToSeries("Upword", barData[2].timestamp, psar);
-  } else {
-    drawChartPointToSeries("Downward", barData[2].timestamp, psar);
-  }
-
   integer msleepFlag = 0;
   integer shouldBePositionClosed;
-
-  setChartsPairBuffering(true);
 
   for (integer i = 3; i < sizeof(barData); i++) {
     onTimeOutTest(i);
@@ -375,8 +361,6 @@ float backtest() {
           t.isAsk = true;
           onOwnOrderFilledTest(t);
           buyCount ++;
-          drawChartPointToSeries("Buy", lastTransaction.tradeTime, lastTransaction.price);      
-          drawChartPointToSeries("Direction", lastTransaction.tradeTime, lastTransaction.price); 
         } 
         else {
           currentOrderId++;
@@ -390,8 +374,6 @@ float backtest() {
           t.isAsk = false;
           onOwnOrderFilledTest(t);
           sellCount ++;
-          drawChartPointToSeries("Sell", lastTransaction.tradeTime, lastTransaction.price);
-          drawChartPointToSeries("Direction", lastTransaction.tradeTime, lastTransaction.price); 
         }
       }
     }
@@ -401,9 +383,6 @@ float backtest() {
       msleep(20);
     }  
   }
-
-  setChartsPairBuffering(false);
-
 
   float rewardToRiskRatio = totalWin / totalLoss;
   float winLossRatio = toFloat(winCount) / toFloat(lossCount);
@@ -512,26 +491,7 @@ string optimization() {
     return "Too long period error";
   }
 
-  setCurrentChartsExchange(EXCHANGESETTING);
-  setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
-
-  setChartDataTitle("PSAR - " + toString(AFINIT) + ", " + toString(AFMAX) + ", " + toString(AFSTEP));
-
-  setCurrentSeriesName("Sell");
-  configureScatter(true, "red", "red", 7.0);
-
-  setCurrentSeriesName("Buy");
-  configureScatter(true, "#7dfd63", "#187206", 7.0,);
-
-  setCurrentSeriesName("Upword");
-  configureScatter(true, "#faf849", "#6d6c0d", 7.0);
-
-  setCurrentSeriesName("Downward");
-  configureScatter(true, "#6beafd", "#095b67", 7.0,);
-
-  setCurrentSeriesName("Direction");
-  configureLine(true, "green", 2.0);
 
   for (float i = AFINITSTART; i <= AFINITEND; i += AFINITSTEP) {
     for (float j = AFMAXSTART; j <= AFMAXEND; j += AFMAXSTEP ) {
