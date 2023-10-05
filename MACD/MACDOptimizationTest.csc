@@ -35,15 +35,16 @@ float   EXPECTANCYBASE    = 0.1;                        # expectancy base
 float   FEE               = 0.002;                      # trading fee as a decimal (0.2%)
 #############################################
 
+# MACD Variables
 float   fastEMA         = 0.0;
 float   slowEMA         = 0.0;
 float   macd            = 0.0;
 float   signal          = 0.0;
 float   histogram       = 0.0;
 
+# Trading Variables
 string  position        = "flat";
 string  prevPosition    = "";    # "", "long", "short"
-
 integer currentOrderId  = 0;
 integer buyCount        = 0;
 integer sellCount       = 0;
@@ -56,7 +57,6 @@ float   totalLoss       = 0.0;
 float   feeTotal        = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-
 string  tradeLogList[];
 float   baseCurrencyBalance   = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
 float   quoteCurrencyBalance  = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
