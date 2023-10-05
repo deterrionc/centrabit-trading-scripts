@@ -13,33 +13,26 @@ import Charts;
 import "library.csh";
 
 #############################################
-# User settings
-
-string  EXCHANGESETTING = "Centrabit";
-string  SYMBOLSETTING   = "LTC/BTC";
-
-integer FASTPERIODSTART = 12;
-integer FASTPERIODEND = 12;
-integer FASTPERIODSTEP = 1;
-integer SLOWPERIODSTART = 26;
-integer SLOWPERIODEND = 26;
-integer SLOWPERIODSTEP = 1;
+# User Settings
+string  EXCHANGESETTING   = "Centrabit";
+string  SYMBOLSETTING     = "LTC/BTC";
+integer FASTPERIODSTART   = 12;
+integer FASTPERIODEND     = 12;
+integer FASTPERIODSTEP    = 1;
+integer SLOWPERIODSTART   = 26;
+integer SLOWPERIODEND     = 26;
+integer SLOWPERIODSTEP    = 1;
 integer SIGNALPERIODSTART = 9;
-integer SIGNALPERIODEND = 11;
-integer SIGNALPERIODSTEP = 1;
-
-string RESOLSTART = "1d";
-string RESOLEND = "1d";
-string RESOLSTEP = "1d";
-
-float   AMOUNT          = 10.0;               # The amount of buy or sell order at once
-
-string  STARTDATETIME   = "2023-03-01 00:00:00";   # Backtest start datetime
-string  ENDDATETIME     = "now";     # Backtest end datetime
-
-float   EXPECTANCYBASE  = 0.1;                     # expectancy base
-float   FEE             = 0.002;                               # trading fee as a decimal (0.2%)
-
+integer SIGNALPERIODEND   = 11;
+integer SIGNALPERIODSTEP  = 1;
+string  RESOLSTART        = "1d";
+string  RESOLEND          = "1d";
+string  RESOLSTEP         = "1d";
+float   AMOUNT            = 10.0;                       # The amount of buy or sell order at once
+string  STARTDATETIME     = "2023-03-01 00:00:00";      # Backtest start datetime
+string  ENDDATETIME       = "now";                      # Backtest end datetime
+float   EXPECTANCYBASE    = 0.1;                        # expectancy base
+float   FEE               = 0.002;                      # trading fee as a decimal (0.2%)
 #############################################
 
 float   fastEMA         = 0.0;
