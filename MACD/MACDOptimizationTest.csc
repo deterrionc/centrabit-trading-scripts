@@ -65,7 +65,6 @@ integer SLOWPERIOD      = 26;
 integer SIGNALPERIOD    = 9;
 string  RESOL           = "1h";
 
-
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
   feeTotal += t.fee;
@@ -83,7 +82,7 @@ void onOwnOrderFilledTest(transaction t) {
   if (isOddOrder == 0) {
     print(toString(t.marker) + " filled (" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + ") : " + toString(t.price) + " * " + toString(t.amount) + ",  fee: " + toString(t.fee) + ",  Total profit: " + toString(sellTotal - buyTotal - feeTotal));
     string tradeNumStr = toString(tradeNumber);
-    for (integer i=0; i<strlength(tradeNumStr); i++) {
+    for (integer i = 0; i < strlength(tradeNumStr); i++) {
       tradeLog += " ";
     }
     float profit;
@@ -288,8 +287,9 @@ float backtest() {
     }
 
     msleepFlag = i % 2000;
-    if ( msleepFlag == 0)
+    if ( msleepFlag == 0) {
       msleep(30);    
+    }
   }
 
   float rewardToRiskRatio = totalWin / totalLoss;
@@ -313,10 +313,7 @@ float backtest() {
     resultString = "FAIL";
   }
 
-  print("");
-  
   string tradeListTitle = "\tTrade\tTime\t\t" + SYMBOLSETTING + "\t\t" + getBaseCurrencyName(SYMBOLSETTING) + "(per)\tProf" + getQuoteCurrencyName(SYMBOLSETTING) + "\t\tAcc";
-
 
   print("--------------------------------------------------------------------------------------------------------------------------");
   print(tradeListTitle);
@@ -334,7 +331,6 @@ float backtest() {
   print("@ Expectancy Base: " + toString(EXPECTANCYBASE));
   print(" ");
   print("Result : " + resultString);
-
   print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
   print("*****************************");
 
@@ -409,17 +405,13 @@ string optimization() {
         for (integer k = RESOLSTARTInt; k <= RESOLENDInt; k += RESOLSTEPInt) {
           paramSetNo ++;
           resolStr = toString(k) + RESOLSTARTUnitSymbol;
-          
           paramSet = "FASTPERIOD : " + toString(i) + ", SLOWPERIOD : " + toString(j) + ", SIGNALPERIOD : " + toString(p) + ", RESOL : " + resolStr;
-
           FASTPERIOD = i;
           SLOWPERIOD = j;
           SIGNALPERIOD = p;
           RESOL = resolStr;
-
           print("------------------- Bacttest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
           profit = backtest();
-          
           profitResult >> profit;
           paramSetResult >> paramSet;
           msleep(100);
@@ -437,19 +429,16 @@ string optimization() {
   }
 
   print(" ");
-
   print("================= Total optimization test result =================");
-
   print(" ");
+
   for (integer k=0; k< sizeof(paramSetResult); k++) {
     paramSetResult[k] = paramSetResult[k] + ", Profit : " + toString(profitResult[k]);
     print(paramSetResult[k]);
   }
 
   print("---------------- The optimized param set --------------");
-
   print(paramSetResult[best]);
-
   print("-------------------------------------------------------");
   print(" ");
   print("===========================================================");
