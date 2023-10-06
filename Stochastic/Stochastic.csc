@@ -32,3 +32,5 @@ string  logFilePath     = "c:/stochastic_log_tradelist_";   # Please make sure t
 float stocValue = 0.0;
 float stocPrices[];
 transaction transactions[];
+
+# Trading Variables
