@@ -6,7 +6,8 @@
 #  - bollingerUpperBand                  01/22/2023
 #  - bollingerLowerBand                  01/22/2023
 #  - EMA(Exponential Moving Average)     01/31/2023
-#
+#  - ATR(Average True Range)             09/20/2023
+#  - getStocValue                        10/05/2023
 
 # Script Name
 script library;
@@ -334,4 +335,23 @@ void printFillLogs(transaction t, string totalProfit) {
   } else {
     print(toString(t.marker) + " Filled \t[" + timeToString(t.tradeTime, "yyyy-MM-dd hh:mm:ss") + "]: " + "Price " + toString(t.price) + "  Amount: " + toString(t.amount) + ",  Fee: " + toString(t.fee) + ",  Total profit: " + totalProfit);
   }
+}
+
+#  Get Stochastic Oscillator Value.
+#  @prototype
+#       void getStocValue(float[] data)
+#  @params
+#       Most recent trading prices
+#  @return
+#       Stochastic Oscillator Value
+float getStocValue(float[] data) {
+  integer dataLength = sizeof(data);
+  float recentPrice = data[dataLength - 1];
+  float lowest = fminInArray(data);
+  float highest = fmaxInArray(data);
+  if (highest == lowest) {
+    return 50.0;
+  }
+  float stoc = 100.0 * (recentPrice - lowest) / (highest - lowest);
+  return stoc;
 }
