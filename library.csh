@@ -349,6 +349,9 @@ float getStocValue(float[] data) {
   float recentPrice = data[dataLength - 1];
   float lowest = fminInArray(data);
   float highest = fmaxInArray(data);
+  if (highest == lowest) {
+    return 50.0;
+  }
   float stoc = 100.0 * (recentPrice - lowest) / (highest - lowest);
   return stoc;
 }
