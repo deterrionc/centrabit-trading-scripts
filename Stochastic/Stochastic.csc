@@ -27,3 +27,10 @@ string  RESOL           = "1m";                             # Bar resolution
 float   AMOUNT          = 1.0;                              # The amount of buy or sell order at once
 string  logFilePath     = "c:/stochastic_log_tradelist_";   # Please make sure this path any drive except C:
 #############################################
+
+# Stochastic Variables
+float stocValue = 0.0;
+float stocPrices[];
+transaction transactions[];
+
+# Trading Variables
