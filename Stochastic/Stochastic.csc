@@ -2,3 +2,13 @@
 
 # Script Name
 script Stochastic;
+
+# System Libraries
+import IO;
+import Math;
+import Strings;
+import Trades;
+import Time;
+import Charts;
+import Files;
+import Processes;
