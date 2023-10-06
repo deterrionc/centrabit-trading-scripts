@@ -12,3 +12,6 @@ import Time;
 import Charts;
 import Files;
 import Processes;
+
+# Built-in Library
+import "library.csh";
