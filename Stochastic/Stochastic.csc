@@ -36,3 +36,4 @@ transaction transactions[];
 # Trading Variables
 string  position        = "flat";
 string  prevPosition    = "";
+integer resolution      = interpretResol(RESOL);
