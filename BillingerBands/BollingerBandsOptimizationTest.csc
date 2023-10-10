@@ -17,14 +17,14 @@ import "library.csh";
 string  EXCHANGESETTING = "Centrabit";
 string  SYMBOLSETTING   = "LTC/BTC";
 integer SMALENSTART     = 20;
-integer SMALENEND       = 30;
+integer SMALENEND       = 20;
 integer SMALENSTEP      = 10;
-float   STDDEVSTART     = 2.0;
-float   STDDEVEND       = 2.0;
+float   STDDEVSTART     = 4.0;
+float   STDDEVEND       = 4.0;
 float   STDDEVSTEP      = 2.0;
-string  RESOLSTART      = "1h";
-string  RESOLEND        = "1h";
-string  RESOLSTEP       = "1h";
+string  RESOLSTART      = "30m";
+string  RESOLEND        = "30m";
+string  RESOLSTEP       = "5m";
 float   EXPECTANCYBASE  = 0.1;                              # expectancy base
 float   FEE             = 0.002;                            # trading fee as a decimal (0.2%)s
 float   AMOUNT          = 1.0;                              # The amount of buy or sell order at once
@@ -64,9 +64,9 @@ float   lastOwnOrderPrice = 0.0;
 float   lockedPriceForProfit = 0.0;
 
 # Current running sma, stddev, resol
-integer SMALEN          = 20;                             # SMA period length
-float   STDDEVSETTING   = 2.0;                            # Standard Deviation
-string  RESOL           = "1h";                           # Bar resolution
+integer SMALEN          = SMALENSTART;                          # SMA period length
+float   STDDEVSETTING   = STDDEVSTART;                          # Standard Deviation
+string  RESOL           = RESOLSTART;                           # Bar resolution
 
 # Drawable flag
 boolean drawable = false;
@@ -147,7 +147,7 @@ boolean stopLossTick(integer timeStamp, float price) {
       t.marker = currentOrderId;
       t.price = price;
       t.amount = AMOUNT;
-      t.fee = AMOUNT*price*FEE * 0.01;
+      t.fee = AMOUNT * price * FEE;
       t.tradeTime = timeStamp;
       t.isAsk = false;
       onOwnOrderFilledTest(t);
@@ -170,7 +170,7 @@ boolean stopLossTick(integer timeStamp, float price) {
       t.marker = currentOrderId;
       t.price = price + price;
       t.amount = AMOUNT;
-      t.fee = AMOUNT*price*FEE * 0.01;
+      t.fee = AMOUNT * price * FEE;
       t.tradeTime = timeStamp;
       t.isAsk = true;
       onOwnOrderFilledTest(t);
@@ -185,25 +185,6 @@ boolean stopLossTick(integer timeStamp, float price) {
   return false;
 }
 
-boolean trailingStopTick(float price) {
-  if (USETRAILINGSTOP == false)
-    return false;
-  if (price < lowerBand) {  # if the position is in  
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit < price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-  if (price > upperBand) {
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit > price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-  lockedPriceForProfit = 0.0;
-  return false;
-}
-
 void updateBollingerBands() {
   smaPrices >> lastPrice;
   delete smaPrices[0];
@@ -214,57 +195,53 @@ void updateBollingerBands() {
   lowerBand = bollingerLowerBand(smaPrices, sma, stddev, STDDEVSETTING);
 }
 
-void bollingerBandsTick(integer tradeTime, float price) {
-  drawChartPointToSeries("Middle", tradeTime, sma);
-  drawChartPointToSeries("Upper", tradeTime, upperBand);
-  drawChartPointToSeries("Lower", tradeTime, lowerBand);
-  lastPrice = price;
+void onPubOrderFilledTest(transaction t) {
+  drawChartPointToSeries("Middle", t.tradeTime, sma);
+  drawChartPointToSeries("Upper", t.tradeTime, upperBand);
+  drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
+  lastPrice = t.price;
 
-  if (stopLossTick(tradeTime, price))
-    return;
-
-  if (trailingStopTick(price))
-    return;
-  
   string signal = "";
 
-  if (price > upperBand && position != "short") {
-    if (prevPosition == "")
+  if (t.price > upperBand && position != "short") {
+    if (prevPosition == "") {
       signal = "sell";
-    else if (position == "long")
+    } else if (position == "long") {
       signal = "sell";
-    else if (position == "flat" && prevPosition == "short")
+    } else if (position == "flat" && prevPosition == "short") {
       signal = "sell";
+    }
   }
-  if (price < lowerBand && position != "long") {
-      if (prevPosition == "")
+  if (t.price < lowerBand && position != "long") {
+    if (prevPosition == "") {
       signal = "buy";
-    else if (position == "short")
+    } else if (position == "short") {
       signal = "buy";
-    else if (position == "flat" && prevPosition == "long")
+    } else if (position == "flat" && prevPosition == "long") {
       signal = "buy";
+    }
   }
 
   if (signal == "sell") {
     # Sell oder execution
     currentOrderId ++;
-    printOrderLogs(currentOrderId, "Sell", tradeTime, price, AMOUNT, "");
+    printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
     # emulating sell order filling
-    transaction t;
-    t.id = currentOrderId;
-    t.marker = currentOrderId;
-    t.price = price;
-    t.amount = AMOUNT;
-    t.fee = AMOUNT*price*FEE * 0.01;
-    t.tradeTime = tradeTime;
-    t.isAsk = false;
-    onOwnOrderFilledTest(t);
+    transaction filledTran;
+    filledTran.id = currentOrderId;
+    filledTran.marker = currentOrderId;
+    filledTran.price = t.price;
+    filledTran.amount = AMOUNT;
+    filledTran.fee = AMOUNT * t.price * FEE;
+    filledTran.tradeTime = t.tradeTime;
+    filledTran.isAsk = false;
+    onOwnOrderFilledTest(filledTran);
 
     # drawing sell point and porit or loss line
-    drawChartPointToSeries("Sell", tradeTime, price);
-    drawChartPointToSeries("Direction", tradeTime, price);
+    drawChartPointToSeries("Sell", t.tradeTime, t.price);
+    drawChartPointToSeries("Direction", t.tradeTime, t.price);
     # Update the last own order price
-    lastOwnOrderPrice = price;
+    lastOwnOrderPrice = t.price;
     if (position == "flat") {
       if (prevPosition == "") {
         prevPosition = "short";
@@ -278,24 +255,24 @@ void bollingerBandsTick(integer tradeTime, float price) {
   if (signal == "buy") {
     # buy order execution
     currentOrderId ++;
-    printOrderLogs(currentOrderId, "Buy", tradeTime, price, AMOUNT, "");
+    printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
 
     # emulating buy order filling
-    transaction t;
-    t.id = currentOrderId;
-    t.marker = currentOrderId;
-    t.price = price;
-    t.amount = AMOUNT;
-    t.fee = AMOUNT*price*FEE * 0.01;
-    t.tradeTime = tradeTime;
-    t.isAsk = true;
-    onOwnOrderFilledTest(t);
+    transaction filledTran;
+    filledTran.id = currentOrderId;
+    filledTran.marker = currentOrderId;
+    filledTran.price = t.price;
+    filledTran.amount = AMOUNT;
+    filledTran.fee = AMOUNT * t.price * FEE;
+    filledTran.tradeTime = t.tradeTime;
+    filledTran.isAsk = true;
+    onOwnOrderFilledTest(filledTran);
         
     # drawing buy point and porit or loss line
-    drawChartPointToSeries("Buy", tradeTime, price);
-    drawChartPointToSeries("Direction", tradeTime, price);
+    drawChartPointToSeries("Buy", t.tradeTime, t.price);
+    drawChartPointToSeries("Direction", t.tradeTime, t.price);
     # Update the last own order price
-    lastOwnOrderPrice = price;
+    lastOwnOrderPrice = t.price;
     if (position == "flat") {
       if (prevPosition == "") {
         prevPosition = "long";
@@ -306,10 +283,6 @@ void bollingerBandsTick(integer tradeTime, float price) {
     }
     buyCount ++;  
   }
-}
-
-void onPubOrderFilledTest(transaction t) {
-  bollingerBandsTick(t.tradeTime, t.price);
 }
 
 void onTimedOutTest() {
@@ -439,7 +412,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -456,7 +429,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
