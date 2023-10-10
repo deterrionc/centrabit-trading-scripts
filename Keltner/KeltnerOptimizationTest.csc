@@ -144,6 +144,7 @@ void updateKeltnerParams(transaction t) {
 }
 
 void onPubOrderFilledTest(transaction t) {
+
   string signal = "";
 
   if (t.price > upperBand && position != "short") {
@@ -175,7 +176,7 @@ void onPubOrderFilledTest(transaction t) {
     filledTran.marker = currentOrderId;
     filledTran.price = t.price;
     filledTran.amount = AMOUNT;
-    filledTran.fee = AMOUNT*t.price*FEE * 0.01;
+    filledTran.fee = AMOUNT * t.price * FEE;
     filledTran.tradeTime = t.tradeTime;
     filledTran.isAsk = false;
     onOwnOrderFilledTest(filledTran);
@@ -197,7 +198,7 @@ void onPubOrderFilledTest(transaction t) {
     filledTran.marker = currentOrderId;
     filledTran.price = t.price;
     filledTran.amount = AMOUNT;
-    filledTran.fee = AMOUNT*t.price*FEE * 0.01;
+    filledTran.fee = AMOUNT * t.price * FEE;
     filledTran.tradeTime = t.tradeTime;
     filledTran.isAsk = true;
     onOwnOrderFilledTest(filledTran);
@@ -290,7 +291,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -301,7 +302,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
