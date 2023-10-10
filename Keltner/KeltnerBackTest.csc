@@ -70,28 +70,6 @@ transaction transactions[];
 transaction currentTran;
 transaction entryTran;
 
-void initCommonParameters() {
-  if (toBoolean(getVariable("EXCHANGE"))) 
-    EXCHANGESETTING = getVariable("EXCHANGE");
-  if (toBoolean(getVariable("CURRNCYPAIR"))) 
-    SYMBOLSETTING = getVariable("CURRNCYPAIR");
-  if (toBoolean(getVariable("RESOLUTION"))) 
-    RESOL = getVariable("RESOLUTION");
-  if (toBoolean(getVariable("AMOUNT"))) 
-    AMOUNT = toFloat(getVariable("AMOUNT"));
-  if (toBoolean(getVariable("STARTDATETIME"))) 
-    STARTDATETIME = getVariable("STARTDATETIME");
-  if (toBoolean(getVariable("ENDDATETIME"))) 
-    ENDDATETIME = getVariable("ENDDATETIME");
-  if (toBoolean(getVariable("EXPECTANCYBASE"))) 
-    EXPECTANCYBASE = toFloat(getVariable("EXPECTANCYBASE"));
-}
-
-void saveResultToEnv(string accProfit, string expectancy) {
-  setVariable("ACCPROFIT", accProfit);
-  setVariable("EXPECTANCY", expectancy);  
-}
-
 void updateKeltnerParams(transaction t) {
   delete transactions[0];
   delete atrBars[0];
@@ -237,47 +215,6 @@ void onOwnOrderFilledTest(transaction t) {
   }
 }
 
-boolean stopLossTick(float price){
-  if (position == "flat" || STOPLOSSAT <= 0.0) {
-    return false;
-  }
-
-  float limitPrice;
-  float lastOwnOrderPrice = entryTran.price;
-
-  if (position == "long") {
-    limitPrice = lastOwnOrderPrice * (1.0 - STOPLOSSAT);
-    if (price < limitPrice) {
-      return true;
-    }
-  } else if (position == "short") {
-    limitPrice = lastOwnOrderPrice * (1.0 + STOPLOSSAT);
-    if (price > limitPrice) {
-      return true;
-    }
-  }
-  return false;
-}
-
-boolean trailingStopTick(float price) {
-  if (USETRAILINGSTOP == false)
-    return false;
-  if (price < lowerBand) {      # if the position is in  
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit < price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-  if (price > upperBand) {
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit > price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-  lockedPriceForProfit = 0.0;
-  return false;
-}
-
 void onPubOrderFilledTest(transaction t) {
   currentTran = t;
 
@@ -285,164 +222,110 @@ void onPubOrderFilledTest(transaction t) {
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
 
-  if (trailingStopTick(t.price)) {
-    return; 
-  }
- 
-  stopLossFlag = stopLossTick(t.price);
-  if (stopLossFlag) {
-    currentOrderId++;
-    if (position == "long") {     # Bought -> Sell
-      printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
-      buyStopped = true;
+  if (t.price > upperBand) {      # Sell Signal
+    boolean sellSignal = false;
+    if (position == "long") {
+      sellSignal = true;
+    } else if (position == "flat") {
+      if (prevPosition == "") {
+        sellSignal = true;
+      }
+      if (prevPosition == "short") {
+        sellSignal = true;
+      }
+    }
+    if (sellSignal) {
+      currentOrderId++;
+      if (currentOrderId == 1) {
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
+      } else {
+        printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
+      }
       # Emulate Sell Order
       transaction filledTran;
       filledTran.id = currentOrderId;
       filledTran.marker = currentOrderId;
       filledTran.price = t.price;
-      filledTran.amount = AMOUNT;
-      filledTran.fee = AMOUNT * t.price * FEE;
+      if (currentOrderId == 1) {
+        filledTran.amount = AMOUNT / 2.0;
+        filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
+      } else {
+        filledTran.amount = AMOUNT;
+        filledTran.fee = AMOUNT * t.price * FEE;
+      }
       filledTran.tradeTime = t.tradeTime;
       filledTran.isAsk = false;
       onOwnOrderFilledTest(filledTran);
-      position = "flat";
-      prevPosition = "long";
+      if (position == "flat") {
+        if (prevPosition == "") {
+          prevPosition = "short";
+        }
+        position = "short";
+        prevPosition = "flat";
+      } else {
+        position = "flat";
+        prevPosition = "long";
+      }
       sellCount++;
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
-    }
-    if (position == "short") {        # Sold -> Buy
-      printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "  (StopLoss order)");
-      sellStopped = true;
-      # Emulate Buy Order
-      transaction filledTran;
-      filledTran.id = currentOrderId;
-      filledTran.marker = currentOrderId;
-      filledTran.price = t.price;
-      filledTran.amount = AMOUNT;
-      filledTran.fee = AMOUNT * t.price * FEE;
-      filledTran.tradeTime = t.tradeTime;
-      filledTran.isAsk = true;
-      onOwnOrderFilledTest(filledTran);
-      position = "flat";
-      prevPosition = "short";
-      buyCount++;
-      drawChartPointToSeries("Buy", t.tradeTime, t.price);
-    }
-    stopLossFlag = false;
-  }
-  if (t.price > upperBand) {      # Sell Signal
-    if (buyStopped) {  # Release buy stop when sell signal
-      buyStopped = false;
-    } else if (!sellStopped) {
-      boolean sellSignal = false;
-      if (position == "long") {
-        sellSignal = true;
-      } else if (position == "flat") {
-        if (prevPosition == "") {
-          sellSignal = true;
-        }
-        if (prevPosition == "short") {
-          sellSignal = true;
-        }
-      }
-      if (sellSignal) {
-        currentOrderId++;
-        if (currentOrderId == 1) {
-          printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT / 2.0, "");
-        } else {
-          printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
-        }
-        # Emulate Sell Order
-        transaction filledTran;
-        filledTran.id = currentOrderId;
-        filledTran.marker = currentOrderId;
-        filledTran.price = t.price;
-        if (currentOrderId == 1) {
-          filledTran.amount = AMOUNT / 2.0;
-          filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
-        } else {
-          filledTran.amount = AMOUNT;
-          filledTran.fee = AMOUNT * t.price * FEE;
-        }
-        filledTran.tradeTime = t.tradeTime;
-        filledTran.isAsk = false;
-        onOwnOrderFilledTest(filledTran);
-        if (position == "flat") {
-          if (prevPosition == "") {
-            prevPosition = "short";
-          }
-          position = "short";
-          prevPosition = "flat";
-        } else {
-          position = "flat";
-          prevPosition = "long";
-        }
-        sellCount++;
-        drawChartPointToSeries("Sell", t.tradeTime, t.price);
-      }
     }
   }
 
   if (t.price < lowerBand) {          # Buy Signal
-    if (sellStopped) {                # Release sell stop when buy signal
-      sellStopped = false;
-    } else if (!buyStopped) {
-      boolean buySignal = false;
-      if (position == "short") {
+    boolean buySignal = false;
+    if (position == "short") {
+      buySignal = true;
+    } else if (position == "flat") {
+      if (prevPosition == "") {
         buySignal = true;
-      } else if (position == "flat") {
+      }
+      if (prevPosition == "long") {
+        buySignal = true;
+      }
+    }
+
+    if (buySignal) {
+      currentOrderId++;
+      if (currentOrderId == 1) {
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
+      } else {
+        printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
+      }
+  
+      # emulating buy order filling
+      transaction filledTran;
+      filledTran.id = currentOrderId;
+      filledTran.marker = currentOrderId;
+      filledTran.price = t.price;
+      if (currentOrderId == 1) {
+        filledTran.amount = AMOUNT / 2.0;
+        filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
+      } else {
+        filledTran.amount = AMOUNT;
+        filledTran.fee = AMOUNT * t.price * FEE;
+      }
+      filledTran.tradeTime = t.tradeTime;
+      filledTran.isAsk = true;
+      onOwnOrderFilledTest(filledTran);
+
+      if (position == "flat") {
         if (prevPosition == "") {
-          buySignal = true;
+          prevPosition = "long";
         }
-        if (prevPosition == "long") {
-          buySignal = true;
-        }
+        position = "long";
+        prevPosition = "flat";
+      } else {
+        position = "flat";
+        prevPosition = "short";
       }
 
-      if (buySignal) {
-        currentOrderId++;
-        if (currentOrderId == 1) {
-          printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT / 2.0, "");
-        } else {
-          printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
-        }
-    
-        # emulating buy order filling
-        transaction filledTran;
-        filledTran.id = currentOrderId;
-        filledTran.marker = currentOrderId;
-        filledTran.price = t.price;
-        if (currentOrderId == 1) {
-          filledTran.amount = AMOUNT / 2.0;
-          filledTran.fee = AMOUNT / 2.0 * t.price * FEE;
-        } else {
-          filledTran.amount = AMOUNT;
-          filledTran.fee = AMOUNT * t.price * FEE;
-        }
-        filledTran.tradeTime = t.tradeTime;
-        filledTran.isAsk = true;
-        onOwnOrderFilledTest(filledTran);
-
-        if (position == "flat") {
-          if (prevPosition == "") {
-            prevPosition = "long";
-          }
-          position = "long";
-          prevPosition = "flat";
-        } else {
-          position = "flat";
-          prevPosition = "short";
-        }
-
-        buyCount++;
-        drawChartPointToSeries("Buy", t.tradeTime, t.price);
-      }
+      buyCount++;
+      drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
   }
 }
 
 float backtest() {
-  initCommonParameters();
   print("^^^^^^^^ Keltner Backtest ( EXCHANGE : " + EXCHANGESETTING + ", CURRENCY PAIR : " + SYMBOLSETTING + ") ^^^^^^^^^\n");
 
   # Fetching the historical trading data of given datatime period
@@ -609,8 +492,6 @@ float backtest() {
   print("Result : " + resultString);
   print("Total profit : " + toString(sellTotal - buyTotal - feeTotal));
   print("*****************************");
-
-  saveResultToEnv(toString(sellTotal - buyTotal - feeTotal), toString(tharpExpectancy));
 
   return sellTotal - buyTotal;
 }

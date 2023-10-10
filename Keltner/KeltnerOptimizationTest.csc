@@ -17,15 +17,15 @@ import "library.csh";
 string  EXCHANGESETTING     = "Centrabit";
 string  SYMBOLSETTING       = "LTC/BTC";
 integer EMALENSTART         = 20;
-integer EMALENEND           = 30;
+integer EMALENEND           = 20;
 integer EMALENSTEP          = 10;
 float   ATRMULTIPLIERSTART  = 0.5;
 float   ATRMULTIPLIEREND    = 0.5;
 float   ATRMULTIPLIERSTEP   = 0.1;
 integer ATRLENGTH           = 14;                      # ATR period length (must be over than 3)
-string  RESOLSTART          = "1h";
-string  RESOLEND            = "1h";
-string  RESOLSTEP           = "1h";
+string  RESOLSTART          = "30m";
+string  RESOLEND            = "30m";
+string  RESOLSTEP           = "30m";
 float   EXPECTANCYBASE      = 0.1;                     # expectancy base
 float   FEE                 = 0.002;                   # trading fee as a decimal (0.2%)s
 float   AMOUNT              = 1.0;                     # The amount of buy or sell order at once
@@ -68,9 +68,9 @@ transaction transForTest[];
 float lockedPriceForProfit = 0.0;
 
 # Current running ema, ATRMULTIPLIER, resol
-integer EMALEN          = 20;                       # EMA period length
-float   ATRMULTIPLIER   = 0.5;                      # Standard Deviation
-string  RESOL           = "1h";                     # Bar resolution
+integer EMALEN          = EMALENSTART;                  # EMA period length
+float   ATRMULTIPLIER   = ATRMULTIPLIERSTART;           # Standard Deviation
+string  RESOL           = "30m";                        # Bar resolution
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
@@ -127,78 +127,6 @@ void onOwnOrderFilledTest(transaction t) {
   }
 }
 
-boolean stopLossTick(integer timeStamp, float price) {
-  if (position == "flat" || STOPLOSSAT <= 0.0) {
-    return false;
-  }
-
-  float limitPrice;
-  float amount;
-  float filledPrice;
-  if (position == "long" && price < lowerBand) {
-    limitPrice = lastOwnOrderPrice * (1.0 - STOPLOSSAT);
-    if (price < limitPrice) {
-      currentOrderId++;
-      printOrderLogs(currentOrderId, "Sell", timeStamp, price, AMOUNT, "  (StopLoss order)");
-
-      transaction t;
-      t.id = currentOrderId;
-      t.marker = currentOrderId;
-      t.price = price;
-      t.amount = AMOUNT;
-      t.fee = AMOUNT*price*FEE * 0.01;
-      t.tradeTime = timeStamp;
-      t.isAsk = false;
-      onOwnOrderFilledTest(t);
-
-      sellCount++;
-      position = "flat";
-      return true;
-    }
-  } else if (position == "short" && price > upperBand) {
-    limitPrice = lastOwnOrderPrice * (1.0 + STOPLOSSAT);
-    if (price > limitPrice ) {
-      currentOrderId++;
-      printOrderLogs(currentOrderId, "Buy", timeStamp, price, AMOUNT, "  (StopLoss order)");
-
-      transaction t;
-      t.id = currentOrderId;
-      t.marker = currentOrderId;
-      t.price = price;
-      t.amount = AMOUNT;
-      t.fee = AMOUNT*price*FEE * 0.01;
-      t.tradeTime = timeStamp;
-      t.isAsk = true;
-      onOwnOrderFilledTest(t);
-
-      buyCount++;  
-      position = "flat";
-      return true;
-    }
-  }
-  return false;
-}
-
-boolean trailingStopTick(float price) {
-  if (USETRAILINGSTOP == false) {
-    return false;
-  }
-  if (price < lowerBand) {  # if the position is in  
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit < price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-  if (price > upperBand) {
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit > price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-  lockedPriceForProfit = 0.0;
-  return false;
-}
-
 void updateKeltnerParams(transaction t) {
   delete transactions[0];
   delete atrBars[0];
@@ -216,14 +144,6 @@ void updateKeltnerParams(transaction t) {
 }
 
 void onPubOrderFilledTest(transaction t) {
-  if (stopLossTick(t.tradeTime, t.price)) {
-    return;
-  }
-
-  if (trailingStopTick(t.price)) {
-    return;
-  }
-
   string signal = "";
 
   if (t.price > upperBand && position != "short") {
