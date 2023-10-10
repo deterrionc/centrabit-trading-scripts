@@ -70,7 +70,7 @@ float lockedPriceForProfit = 0.0;
 # Current running ema, ATRMULTIPLIER, resol
 integer EMALEN          = EMALENSTART;                  # EMA period length
 float   ATRMULTIPLIER   = ATRMULTIPLIERSTART;           # Standard Deviation
-string  RESOL           = "30m";                        # Bar resolution
+string  RESOL           = RESOLSTART;                   # Bar resolution
 
 void onOwnOrderFilledTest(transaction t) {
   float amount = t.price * t.amount;
@@ -144,7 +144,6 @@ void updateKeltnerParams(transaction t) {
 }
 
 void onPubOrderFilledTest(transaction t) {
-
   string signal = "";
 
   if (t.price > upperBand && position != "short") {
