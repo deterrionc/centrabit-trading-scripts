@@ -78,7 +78,7 @@ void makeOrder(transaction t, float orderAmount, float price, boolean isCloseOrd
 void openTrade(integer timestamp, float orderAmount, float price) {
   if (orderAmount == 0.0 )
     return;
-  curTradeId ++;
+  curTradeId++;
   openTime = timestamp;
   openPrice = price;
   tradeOrderMax = fabs(orderAmount);

@@ -305,7 +305,7 @@ void onTimeOutTest(integer i) {
       t.tradeTime = currentTran.tradeTime;
       t.isAsk = true;
       onOwnOrderFilledTest(t);
-      buyCount ++;
+      buyCount++;
       drawChartPointToSeries("Buy", currentTran.tradeTime, currentTran.price);      
     }
   } else {
@@ -322,7 +322,7 @@ void onTimeOutTest(integer i) {
       t.tradeTime = currentTran.tradeTime;
       t.isAsk = false;
       onOwnOrderFilledTest(t);
-      sellCount ++;
+      sellCount++;
       drawChartPointToSeries("Sell", currentTran.tradeTime, currentTran.price);
     }
   }
@@ -488,7 +488,7 @@ void backtest() {
           t.tradeTime = currentTran.tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
-          buyCount ++;
+          buyCount++;
           drawChartPointToSeries("Buy", currentTran.tradeTime, currentTran.price);      
           drawChartPointToSeries("Direction", currentTran.tradeTime, currentTran.price); 
         } 
@@ -512,7 +512,7 @@ void backtest() {
           t.tradeTime = currentTran.tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
-          sellCount ++;
+          sellCount++;
           drawChartPointToSeries("Sell", currentTran.tradeTime, currentTran.price);
           drawChartPointToSeries("Direction", currentTran.tradeTime, currentTran.price); 
         }

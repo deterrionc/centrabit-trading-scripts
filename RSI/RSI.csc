@@ -163,7 +163,7 @@ event onPubOrderFilled(string exchange, transaction t) {
       sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
       prevPosition = "long";
-      sellCount ++;
+      sellCount++;
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
     }
 
@@ -172,7 +172,7 @@ event onPubOrderFilled(string exchange, transaction t) {
       buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       position = "flat";
       prevPosition = "short";
-      buyCount ++;
+      buyCount++;
       drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
 
@@ -235,7 +235,7 @@ event onPubOrderFilled(string exchange, transaction t) {
           prevPosition = "short";
         }
 
-        buyCount ++;
+        buyCount++;
         setCurrentChartPosition("0");
         drawChartPointToSeries("Buy", t.tradeTime, t.price);
       }
@@ -275,7 +275,7 @@ event onPubOrderFilled(string exchange, transaction t) {
           prevPosition = "long";
         }
         
-        sellCount ++;
+        sellCount++;
         setCurrentChartPosition("0");
         drawChartPointToSeries("Sell", t.tradeTime, t.price);
       }

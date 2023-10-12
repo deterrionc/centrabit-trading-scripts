@@ -99,10 +99,10 @@ void onOwnOrderFilledTest(transaction t) {
     string tradeResult;
     if (profit >= 0.0 ) {
       totalWin += profit;
-      winCount ++;
+      winCount++;
     } else {
       totalLoss += fabs(profit);
-      lossCount ++;
+      lossCount++;
     }
     tradeLogList >> tradeLog;
   } else {
@@ -155,7 +155,7 @@ void onPubOrderFilledTest(transaction t) {
       prevPosition = "long";
     }
     position = "long";
-    buyCount ++;
+    buyCount++;
   }
   if (histogram < 0.0 && lastHistogram >= 0.0) { # sell signal
     currentOrderId++;
@@ -177,7 +177,7 @@ void onPubOrderFilledTest(transaction t) {
     }
     
     position = "short";
-    sellCount ++;
+    sellCount++;
   }
 }
 
@@ -247,7 +247,7 @@ float backtest() {
         onPubOrderFilledTest(transForTest[i]);
         lastUpdatedTimestamp = transForTest[i].tradeTime;
       } 
-      updateTicker ++;     
+      updateTicker++;     
     } else {
         timecounter = transForTest[i].tradeTime - lastUpdatedTimestamp;
         if (timecounter > (resolution * 60 * 1000 * 1000)) {
@@ -270,7 +270,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
-          sellCount ++;
+          sellCount++;
         } else { # buy order emulation
           printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
           t.id = currentOrderId;
@@ -281,7 +281,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
-          buyCount ++;
+          buyCount++;
         }
       }
     }
@@ -403,7 +403,7 @@ string optimization() {
     for (integer j = SLOWPERIODSTART; j <= SLOWPERIODEND; j += SLOWPERIODSTEP ) {
       for (integer p = SIGNALPERIODSTART; p <= SIGNALPERIODEND; p += SIGNALPERIODSTEP) {
         for (integer k = RESOLSTARTInt; k <= RESOLENDInt; k += RESOLSTEPInt) {
-          paramSetNo ++;
+          paramSetNo++;
           resolStr = toString(k) + RESOLSTARTUnitSymbol;
           paramSet = "FASTPERIOD : " + toString(i) + ", SLOWPERIOD : " + toString(j) + ", SIGNALPERIOD : " + toString(p) + ", RESOL : " + resolStr;
           FASTPERIOD = i;

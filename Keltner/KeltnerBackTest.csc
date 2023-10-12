@@ -413,7 +413,7 @@ float backtest() {
       if (updateTicker == 0 && i != 0) {
         updateKeltnerParams(transForTest[i]);
       } 
-      updateTicker ++;     
+      updateTicker++;     
     }
 
     if (i == (cnt - 1)) {
@@ -430,7 +430,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk     = false;
           onOwnOrderFilledTest(t);
-          sellCount ++;
+          sellCount++;
           drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else { # buy order emulation
           printOrderLogs(currentOrderId, "Buy", transForTest[i].tradeTime, transForTest[i].price, AMOUNT, "");
@@ -442,7 +442,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
-          buyCount ++;
+          buyCount++;
           drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
         }
       }

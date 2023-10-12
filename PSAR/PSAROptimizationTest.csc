@@ -105,10 +105,10 @@ void onOwnOrderFilledTest(transaction t) {
 
     if (profit >= 0.0 ) {
       totalWin += profit;
-      winCount ++;
+      winCount++;
     } else {
       totalLoss += fabs(profit);
-      lossCount ++;
+      lossCount++;
     }
     tradeLogList >> tradeLog;
   } else {
@@ -215,7 +215,7 @@ void onTimeOutTest(integer i) {
       t.tradeTime = lastTransaction.tradeTime;
       t.isAsk = true;
       onOwnOrderFilledTest(t);
-      buyCount ++;
+      buyCount++;
     }
   } else {
     if (oldTrend != "down") {
@@ -229,7 +229,7 @@ void onTimeOutTest(integer i) {
       t.tradeTime = lastTransaction.tradeTime;
       t.isAsk = false;
       onOwnOrderFilledTest(t);
-      sellCount ++;
+      sellCount++;
     }
   }
 }
@@ -360,7 +360,7 @@ float backtest() {
           t.tradeTime = lastTransaction.tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
-          buyCount ++;
+          buyCount++;
         } 
         else {
           currentOrderId++;
@@ -373,7 +373,7 @@ float backtest() {
           t.tradeTime = lastTransaction.tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
-          sellCount ++;
+          sellCount++;
         }
       }
     }
@@ -497,7 +497,7 @@ string optimization() {
     for (float j = AFMAXSTART; j <= AFMAXEND; j += AFMAXSTEP ) {
       for (float p = AFSTEPSTART; p <= AFSTEPEND; p += AFSTEPSTEP) {
         for (integer k = RESOLSTARTInt; k <= RESOLENDInt; k += RESOLSTEPInt) {
-          paramSetNo ++;
+          paramSetNo++;
           resolStr = toString(k);
           resolStr += RESOLSTARTUnitSymbol;
           paramSet = "AFINIT : " + toString(i) + ", AFMAX : " + toString(j) + ", AFSTEP : " + toString(p) + ", RESOL : " + resolStr;

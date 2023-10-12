@@ -216,7 +216,7 @@ void onPubOrderFilledTest(transaction t) {
       position = "flat";
       prevPosition = "long";
 
-      sellCount ++;
+      sellCount++;
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
     }
 
@@ -235,7 +235,7 @@ void onPubOrderFilledTest(transaction t) {
       position = "flat";
       prevPosition = "short";
 
-      buyCount ++;
+      buyCount++;
       drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
 
@@ -307,7 +307,7 @@ void onPubOrderFilledTest(transaction t) {
           prevPosition = "short";
         }
 
-        buyCount ++;
+        buyCount++;
         setCurrentChartPosition("0");
         drawChartPointToSeries("Buy", t.tradeTime, t.price);
       }
@@ -356,7 +356,7 @@ void onPubOrderFilledTest(transaction t) {
           prevPosition = "long";
         }
         
-        sellCount ++;
+        sellCount++;
         setCurrentChartPosition("0");
         drawChartPointToSeries("Sell", t.tradeTime, t.price);
       }
@@ -504,7 +504,7 @@ void backtest() {
         onPubOrderFilledTest(transForTest[i]);
         lastUpdatedTimestamp = transForTest[i].tradeTime;
       } 
-      updateTicker ++;     
+      updateTicker++;     
     } else {
         timecounter = transForTest[i].tradeTime - lastUpdatedTimestamp;
         if (timecounter > (resolution * 60 * 1000 * 1000)) {
@@ -527,7 +527,7 @@ void backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
-          sellCount ++;
+          sellCount++;
           setCurrentChartPosition("0");
           drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
         } else { # buy order emulation
@@ -540,7 +540,7 @@ void backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
-          buyCount ++;
+          buyCount++;
           setCurrentChartPosition("0");
           drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
         }

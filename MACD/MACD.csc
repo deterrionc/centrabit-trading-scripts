@@ -244,7 +244,7 @@ event onPubOrderFilled(string exchange, transaction t) {
         prevPosition = "short";
       }
 
-      buyCount ++;
+      buyCount++;
       drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
   }
@@ -274,7 +274,7 @@ event onPubOrderFilled(string exchange, transaction t) {
         prevPosition = "long";
       }
 
-      sellCount ++;
+      sellCount++;
 
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
     }

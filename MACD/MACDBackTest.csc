@@ -259,7 +259,7 @@ void onPubOrderFilledTest(transaction t) {
 
       position = "flat";
       prevPosition = "long";
-      sellCount ++;
+      sellCount++;
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
     }
 
@@ -277,7 +277,7 @@ void onPubOrderFilledTest(transaction t) {
 
       position = "flat";
       prevPosition = "short";
-      buyCount ++;
+      buyCount++;
       drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
 
@@ -335,7 +335,7 @@ void onPubOrderFilledTest(transaction t) {
         prevPosition = "short";
       }
 
-      buyCount ++;
+      buyCount++;
       drawChartPointToSeries("Buy", t.tradeTime, t.price);
     }
   }
@@ -377,7 +377,7 @@ void onPubOrderFilledTest(transaction t) {
         prevPosition = "long";
       }
 
-      sellCount ++;
+      sellCount++;
       drawChartPointToSeries("Sell", t.tradeTime, t.price);
     }
   }
@@ -494,7 +494,7 @@ void backtest() {
         onPubOrderFilledTest(transForTest[i]);
         lastUpdatedTimestamp = transForTest[i].tradeTime;
       } 
-      updateTicker ++;     
+      updateTicker++;     
     } else {
       timecounter = transForTest[i].tradeTime - lastUpdatedTimestamp;
       if (timecounter > (resolution * 60 * 1000 * 1000)) {

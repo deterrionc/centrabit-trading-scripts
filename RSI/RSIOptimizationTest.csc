@@ -110,10 +110,10 @@ void onOwnOrderFilledTest(transaction t) {
     string tradeResult;
     if (profit >= 0.0 ) {
       totalWin += profit;
-      winCount ++;
+      winCount++;
     } else {
       totalLoss += fabs(profit);
-      lossCount ++;
+      lossCount++;
     }
     tradeLogList >> tradeLog;
   } else {
@@ -174,7 +174,7 @@ void onPubOrderFilledTest(transaction t) {
         prevPosition = "long";
       }
       position = "long";
-      buyCount ++;
+      buyCount++;
       if (drawable) {
         setCurrentChartPosition("0");
         drawChartPointToSeries("Buy", t.tradeTime, t.price);
@@ -202,7 +202,7 @@ void onPubOrderFilledTest(transaction t) {
       }
       
       position = "short";
-      sellCount ++;
+      sellCount++;
       if (drawable) {
         setCurrentChartPosition("0");
         drawChartPointToSeries("Sell", t.tradeTime, t.price);
@@ -317,7 +317,7 @@ float backtest() {
         onPubOrderFilledTest(transForTest[i]);
         lastUpdatedTimestamp = transForTest[i].tradeTime;
       } 
-      updateTicker ++;     
+      updateTicker++;     
     } else {
       timecounter = transForTest[i].tradeTime - lastUpdatedTimestamp;
       if (timecounter > (resolution * 60 * 1000 * 1000)) {
@@ -340,7 +340,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
-          sellCount ++;
+          sellCount++;
           if (drawable) {
             setCurrentChartPosition("0");
             drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
@@ -356,7 +356,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
-          buyCount ++;
+          buyCount++;
           if (drawable) {
             setCurrentChartPosition("0");
             drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
@@ -517,7 +517,7 @@ string Optimization() {
   
   for (integer i = PERIODSTART; i <= PERIODEND; i += PERIODSTEP) {
     for (integer k = RESOLSTARTInt; k <= RESOLENDInt; k += RESOLSTEPInt) {
-      paramSetNo ++;
+      paramSetNo++;
       resolStr = toString(k) + RESOLSTARTUnitSymbol;
       paramSet = "PERIOD : " + toString(i) + ", RESOL : " + resolStr;
       PERIOD = i;

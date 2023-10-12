@@ -106,10 +106,10 @@ void onOwnOrderFilledTest(transaction t) {
     string tradeResult;
     if (profit >= 0.0 ) {
       totalWin += profit;
-      winCount ++;
+      winCount++;
     } else {
       totalLoss += fabs(profit);
-      lossCount ++;
+      lossCount++;
     }
     tradeLogList >> tradeLog;
   } else {
@@ -154,14 +154,14 @@ boolean stopLossTick(integer timeStamp, float price) {
 
       drawChartPointToSeries("Sell", timeStamp, price);
       drawChartPointToSeries("Direction", timeStamp, price); 
-      sellCount ++;
+      sellCount++;
       position = "flat";
       return true;
     }
   } else if (position == "short" && price > upperBand) {
     limitPrice = lastOwnOrderPrice * (1.0 + STOPLOSSAT);
     if (price > limitPrice ) {
-      currentOrderId ++;
+      currentOrderId++;
       printOrderLogs(currentOrderId, "Buy", timeStamp, price, AMOUNT, "  (StopLoss order)");
 
       # emulating buy order filling
@@ -177,7 +177,7 @@ boolean stopLossTick(integer timeStamp, float price) {
 
       drawChartPointToSeries("Buy", timeStamp, price);
       drawChartPointToSeries("Direction", timeStamp, price); 
-      buyCount ++;  
+      buyCount++;  
       position = "flat";
       return true;
     }
@@ -224,7 +224,7 @@ void onPubOrderFilledTest(transaction t) {
 
   if (signal == "sell") {
     # Sell oder execution
-    currentOrderId ++;
+    currentOrderId++;
     printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
     # emulating sell order filling
     transaction filledTran;
@@ -250,11 +250,11 @@ void onPubOrderFilledTest(transaction t) {
     } else {
       position = "flat";
     }
-    sellCount ++;
+    sellCount++;
   }
   if (signal == "buy") {
     # buy order execution
-    currentOrderId ++;
+    currentOrderId++;
     printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
 
     # emulating buy order filling
@@ -281,7 +281,7 @@ void onPubOrderFilledTest(transaction t) {
     } else {
       position = "flat";
     }
-    buyCount ++;  
+    buyCount++;  
   }
 }
 
@@ -391,7 +391,7 @@ float backtest() {
         onTimedOutTest();
         lastUpdatedTimestamp = transForTest[i].tradeTime;
       }      
-      updateTicker ++;     
+      updateTicker++;     
     } else {
         timecounter = transForTest[i].tradeTime - lastUpdatedTimestamp;
         if (timecounter > (resolution * 60 * 1000 * 1000)) {
@@ -416,7 +416,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
-          sellCount ++;
+          sellCount++;
           if (drawable == true) {
             drawChartPointToSeries("Sell", transForTest[i].tradeTime, transForTest[i].price);
             drawChartPointToSeries("Direction", transForTest[i].tradeTime, transForTest[i].price);             
@@ -433,7 +433,7 @@ float backtest() {
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
-          buyCount ++;
+          buyCount++;
           if (drawable == true) {
             drawChartPointToSeries("Buy", transForTest[i].tradeTime, transForTest[i].price);
             drawChartPointToSeries("Direction", transForTest[i].tradeTime, transForTest[i].price);             
@@ -563,7 +563,7 @@ string optimization() {
   for (integer i = SMALENSTART; i <= SMALENEND; i += SMALENSTEP) {
     for (float j = STDDEVSTART; j <= STDDEVEND; j += STDDEVSTEP ) {
       for (integer k = RESOLSTARTInt; k <= RESOLENDInt; k += RESOLSTEPInt) {
-        paramSetNo ++;
+        paramSetNo++;
         resolStr = toString(k) + RESOLSTARTUnitSymbol;
         
         paramSet = "SMALEN : " + toString(i) + ", STDDEV : " + toString(j) + ", RESOL : " + resolStr;

@@ -106,7 +106,7 @@ void main() {
       print(toString(i+1) + "\t" + SCRIPTS[i] + "\t\tCentrabit" + "\t" + CURRENCYPAIR + "\t" + toString(accProfitList[resultIndex]) + "\t" + toString(expectancyList[resultIndex]) + "\t\t" + resultText);
     }
     fwrite(logFile, toString(i+1) + "," + SCRIPTS[i] + ",Centrabit" + "," + CURRENCYPAIR + "," + toString(accProfitList[resultIndex]) + "," + toString(expectancyList[resultIndex]) + ",," + resultText + "\n");
-    resultIndex ++;
+    resultIndex++;
   }
 
   fclose(logFile);
