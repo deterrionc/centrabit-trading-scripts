@@ -29,7 +29,7 @@ string  RESOLSTEP           = "30m";
 float   EXPECTANCYBASE      = 0.1;                     # expectancy base
 float   FEE                 = 0.002;                   # trading fee as a decimal (0.2%)s
 float   AMOUNT              = 1.0;                     # The amount of buy or sell order at once
-string  STARTDATETIME       = "2023-07-01 00:00:00";   # Backtest start datetime
+string  STARTDATETIME       = "2023-01-01 00:00:00";   # Backtest start datetime
 string  ENDDATETIME         = "now";                   # Backtest end datetime
 float   STOPLOSSAT          = 0.05;                    # Stoploss as fraction of price
 boolean USETRAILINGSTOP     = false;
@@ -270,7 +270,7 @@ float backtest() {
   setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
 
-  for (integer i = 0; i < cnt; i++) {
+  for (integer i = ATRLENGTH; i < cnt; i++) {
     onPubOrderFilledTest(transForTest[i]);
     if (transForTest[i].tradeTime < timestampToStartLast24Hours) {
       updateTicker = i % step;
