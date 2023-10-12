@@ -26,9 +26,9 @@ float   AFMAXSTEP       = 0.02;
 float   AFSTEPSTART     = 0.02;
 float   AFSTEPEND       = 0.02;
 float   AFSTEPSTEP      = 0.001;
-string  RESOLSTART      = "6h";
-string  RESOLEND        = "12h";
-string  RESOLSTEP       = "6h";
+string  RESOLSTART      = "1d";
+string  RESOLEND        = "1d";
+string  RESOLSTEP       = "1d";
 float   AMOUNT          = 1.0;                      # The amount of buy or sell order at once
 string  STARTDATETIME   = "2023-07-01 00:00:00";    # Backtest start datetime
 string  ENDDATETIME     = "now";                    # Backtest end datetime
@@ -211,7 +211,7 @@ void onTimeOutTest(integer i) {
       t.marker = currentOrderId;
       t.price = lastTransaction.price + lastTransaction.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
       t.amount = AMOUNT;
-      t.fee = AMOUNT*t.price*FEE * 0.01;
+      t.fee = AMOUNT * t.price * FEE;
       t.tradeTime = lastTransaction.tradeTime;
       t.isAsk = true;
       onOwnOrderFilledTest(t);
@@ -225,7 +225,7 @@ void onTimeOutTest(integer i) {
       t.marker = currentOrderId;
       t.price = lastTransaction.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
       t.amount = AMOUNT;
-      t.fee = AMOUNT*t.price*FEE * 0.01;
+      t.fee = AMOUNT * t.price * FEE;
       t.tradeTime = lastTransaction.tradeTime;
       t.isAsk = false;
       onOwnOrderFilledTest(t);
@@ -356,7 +356,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = lastTransaction.price + lastTransaction.price * randomf((1.0-minFillOrderPercentage), (1.0-maxFillOrderPercentage));
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = lastTransaction.tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
@@ -369,7 +369,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = lastTransaction.price * randomf(minFillOrderPercentage, maxFillOrderPercentage);
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = lastTransaction.tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
