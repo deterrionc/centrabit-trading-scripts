@@ -522,7 +522,7 @@ string Optimization() {
       paramSet = "PERIOD : " + toString(i) + ", RESOL : " + resolStr;
       PERIOD = i;
       RESOL = resolStr;
-      print("------------------- Bacttest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
+      print("------------------- Backtest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
       profit = backtest();
       profitResult >> profit;
       paramSetResult >> paramSet;

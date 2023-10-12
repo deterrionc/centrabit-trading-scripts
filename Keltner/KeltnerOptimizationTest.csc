@@ -427,7 +427,7 @@ string optimization() {
         ATRMULTIPLIER = j;
         RESOL = resolStr;
 
-        print("------------------- Bacttest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
+        print("------------------- Backtest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
         profit = backtest();
         profitResult >> profit;
         paramSetResult >> paramSet;

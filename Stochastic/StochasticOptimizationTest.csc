@@ -340,3 +340,29 @@ float backtest() {
 }
 
 backtest();
+
+void optimization() {
+  # Connection Checking
+  integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
+  integer conTestEndTime = getCurrentTime();
+  transaction conTestTrans[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, conTestStartTime, conTestEndTime);
+  if (sizeof(conTestTrans) == 0) {
+    print("Fetching Data failed. Please check the connection and try again later");
+    exit;
+  }
+
+  integer paramSetNo = 0;
+
+  for (integer i = STOCLENGTHSTART; i <= STOCLENGTHEND; i += STOCLENGTHSTEP) {
+    paramSetNo++;
+    paramSet = "STOCLENTH : " + toString(i) + ", RESOL : " + RESOL;
+
+    STOCLENGTH = i;
+
+    print("------------------- Backtest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
+    profit = backtest();
+    profitResult >> profit;
+    paramSetResult >> paramSet;
+    msleep(100);
+  }
+}

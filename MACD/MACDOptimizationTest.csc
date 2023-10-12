@@ -410,7 +410,7 @@ string optimization() {
           SLOWPERIOD = j;
           SIGNALPERIOD = p;
           RESOL = resolStr;
-          print("------------------- Bacttest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
+          print("------------------- Backtest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
           profit = backtest();
           profitResult >> profit;
           paramSetResult >> paramSet;
