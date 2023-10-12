@@ -23,12 +23,12 @@ integer SLOWPERIODSTART   = 26;
 integer SLOWPERIODEND     = 26;
 integer SLOWPERIODSTEP    = 1;
 integer SIGNALPERIODSTART = 9;
-integer SIGNALPERIODEND   = 11;
+integer SIGNALPERIODEND   = 9;
 integer SIGNALPERIODSTEP  = 1;
-string  RESOLSTART        = "1d";
-string  RESOLEND          = "1d";
-string  RESOLSTEP         = "1d";
-float   AMOUNT            = 10.0;                       # The amount of buy or sell order at once
+string  RESOLSTART        = "30m";
+string  RESOLEND          = "30m";
+string  RESOLSTEP         = "30m";
+float   AMOUNT            = 1.0;                        # The amount of buy or sell order at once
 string  STARTDATETIME     = "2023-07-01 00:00:00";      # Backtest start datetime
 string  ENDDATETIME       = "now";                      # Backtest end datetime
 float   EXPECTANCYBASE    = 0.1;                        # expectancy base
@@ -146,7 +146,7 @@ void onPubOrderFilledTest(transaction t) {
     filledTran.marker = currentOrderId;
     filledTran.price = t.price;
     filledTran.amount = AMOUNT;
-    filledTran.fee = AMOUNT * t.price * FEE * 0.01;
+    filledTran.fee = AMOUNT * t.price * FEE;
     filledTran.tradeTime = t.tradeTime;
     filledTran.isAsk = true;
     onOwnOrderFilledTest(filledTran);
@@ -167,7 +167,7 @@ void onPubOrderFilledTest(transaction t) {
     filledTran.marker = currentOrderId;
     filledTran.price = t.price;
     filledTran.amount = AMOUNT;
-    filledTran.fee = AMOUNT * t.price * FEE * 0.01;
+    filledTran.fee = AMOUNT * t.price * FEE;
     filledTran.tradeTime = t.tradeTime;
     filledTran.isAsk = false;
     onOwnOrderFilledTest(filledTran);
@@ -266,7 +266,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT*t.price*FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -277,7 +277,7 @@ float backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE * 0.01;
+          t.fee = AMOUNT*t.price*FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
