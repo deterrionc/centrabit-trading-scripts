@@ -431,7 +431,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = false;
           onOwnOrderFilledTest(t);
@@ -443,7 +443,7 @@ void backtest() {
           t.marker = currentOrderId;
           t.price = transForTest[i].price;
           t.amount = AMOUNT;
-          t.fee = AMOUNT*t.price*FEE;
+          t.fee = AMOUNT * t.price * FEE;
           t.tradeTime = transForTest[i].tradeTime;
           t.isAsk = true;
           onOwnOrderFilledTest(t);
