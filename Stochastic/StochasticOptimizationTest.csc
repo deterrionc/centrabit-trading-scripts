@@ -339,8 +339,6 @@ float backtest() {
   return 0.0;
 }
 
-backtest();
-
 void optimization() {
   # Connection Checking
   integer conTestStartTime = getCurrentTime() - 60 * 60 * 1000000;           # 1 hour before
@@ -352,6 +350,10 @@ void optimization() {
   }
 
   integer paramSetNo = 0;
+  string paramSetResult[];
+  string paramSet = "";
+  float profitResult[];
+  float profit = 0.0;
 
   for (integer i = STOCLENGTHSTART; i <= STOCLENGTHEND; i += STOCLENGTHSTEP) {
     paramSetNo++;
@@ -361,8 +363,31 @@ void optimization() {
 
     print("------------------- Backtest Case " + toString(paramSetNo) + " : " + paramSet + " -------------------");
     profit = backtest();
-    profitResult >> profit;
     paramSetResult >> paramSet;
+    profitResult >> profit;
     msleep(100);
   }
+
+  integer best = 0;
+  for (integer p = 0; p < sizeof(profitResult); p++) {
+    float temp = profitResult[p] - profitResult[best];
+    if (temp > 0.0) {
+      best = p;
+    }
+  }
+
+  print("\n================= Total optimization test result =================\n");
+
+  for (integer k=0; k< sizeof(paramSetResult); k++) {
+    paramSetResult[k] = paramSetResult[k] + ", Profit : " + toString(profitResult[k]);
+    print(paramSetResult[k]);
+  }
+
+  print("---------------- The optimized param set --------------");
+  print(paramSetResult[best]);
+
+  print("-------------------------------------------------------");
+  print("\n===========================================================\n");
 }
+
+optimization();
