@@ -34,6 +34,7 @@ float stocPrices[];
 transaction transactions[];
 
 # Trading Variables
+boolean canTrade        = true;
 string  position        = "flat";
 string  prevPosition    = "";
 integer resolution      = interpretResol(RESOL);
@@ -80,6 +81,10 @@ void onPubOrderFilled(string exchange, transaction t) {
     return;
   }
 
+  if (!canTrade) {
+    return;
+  }
+
   currentTran = t;
   updateStocParams(t);
 
@@ -112,6 +117,7 @@ void onPubOrderFilled(string exchange, transaction t) {
         printOrderLogs(currentOrderId, "Sell", t.tradeTime, t.price, AMOUNT, "");
         sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       }
+      canTrade = false;
 
       if (position == "flat") {
         if (prevPosition == "") {
@@ -151,6 +157,7 @@ void onPubOrderFilled(string exchange, transaction t) {
         printOrderLogs(currentOrderId, "Buy", t.tradeTime, t.price, AMOUNT, "");
         buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       }
+      canTrade = false;
   
       if (position == "flat") {
         if (prevPosition == "") {
@@ -368,3 +375,7 @@ void main() {
 }
 
 main();
+
+event onTimedOut(integer interval) {
+  canTrade = true;
+}
