@@ -368,6 +368,7 @@ void main() {
   for (integer i = 0; i < sizeof(barsInPeriod); i++) {
     barPriceInSMAPeriod >> barsInPeriod[i].closePrice;
   }
+
   setCurrentChartsExchange(EXCHANGESETTING);
   setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
@@ -407,7 +408,7 @@ void main() {
 
   print("--------------   Running   -------------------");
 
-  addTimer(resolution * 60 * 1000);
+  addTimer(resolution * 10 * 1000);
 }
 
 main();

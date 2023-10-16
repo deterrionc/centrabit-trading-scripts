@@ -371,7 +371,7 @@ void main() {
   baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
   quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
-  addTimer(resolution * 60 * 1000);
+  addTimer(resolution * 10 * 1000);
 }
 
 main();
