@@ -60,11 +60,11 @@ file    logFile;
 float   baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
 float   quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
-float getUpperLimit(float price) {
+float getStopLossUpperLimit(float price) {
   return price * (1.0 + STOPLOSSAT);
 }
 
-float getLowerLimit(float price) {
+float getStopLossLowerLimit(float price) {
   return price * (1.0 - STOPLOSSAT);
 }
 
