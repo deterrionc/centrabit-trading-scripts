@@ -216,10 +216,6 @@ float backtest() {
   integer testStartTime = stringToTime(STARTDATETIME, "yyyy-MM-dd hh:mm:ss");
   integer currentTime = getCurrentTime();
 
-  print("Preparing Bars in Period...");
-  bar barsInPeriod[] = getTimeBars(EXCHANGESETTING, SYMBOLSETTING, testStartTime, EMALEN, resolution * 60 * 1000 * 1000);
-  integer barSize = sizeof(barsInPeriod);
-
   currentOrderId = 0;
   buyTotal = 0.0;
   buyCount = 0;
@@ -230,17 +226,35 @@ float backtest() {
   delete emaPrices;
   delete atrBars;
 
+  integer calcTestTimeStart = testStartTime - 30 * 24 * 60 * 60 * 1000000;
+  transaction transForCalc[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, calcTestTimeStart, testStartTime);
+
+  if (sizeof(transForCalc) < ((ATRLENGTH + EMALEN) * resolution * 2)) {
+    print("Not enough transactions in the past to calculate EMA and ATR.");
+    return;
+  }
+
+  transaction transCalc[];
+  for (integer i = 0; i < sizeof(transForCalc); i++) {
+    if (i % (resolution * 2) == 0) {
+      transCalc << transForCalc[sizeof(transForCalc) - 1 - i];
+    }
+    if (sizeof(transCalc) > (ATRLENGTH + EMALEN)) {
+      break;
+    }
+  }
+
   for (integer i = 0; i < ATRLENGTH; i++) {
     transaction tempTrans[];
     for (integer j = i; j < (i + EMALEN); j++) {
-      tempTrans >> transForTest[j];
+      tempTrans >> transCalc[j];
     }
     bar tempBar = generateBar(tempTrans);
     atrBars >> tempBar;
   }
 
   for (integer i = 0; i < EMALEN; i++) {
-    transaction tempTran = transForTest[ATRLENGTH + i];
+    transaction tempTran = transCalc[ATRLENGTH + i];
     transactions >> tempTran;
     emaPrices >> tempTran.price;
   }

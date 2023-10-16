@@ -349,17 +349,35 @@ float backtest() {
   print("Fetching transactions from " + STARTDATETIME + " to " + ENDDATETIME + "...");
   transaction transForTest[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, testStartTime, testEndTime);
 
+  integer calcTestTimeStart = testStartTime - 30 * 24 * 60 * 60 * 1000000;
+  transaction transForCalc[] = getPubTrades(EXCHANGESETTING, SYMBOLSETTING, calcTestTimeStart, testStartTime);
+
+  if (sizeof(transForCalc) < ((ATRLENGTH + EMALEN) * resolution * 2)) {
+    print("Not enough transactions in the past to calculate EMA and ATR.");
+    exit;
+  }
+
+  transaction transCalc[];
+  for (integer i = 0; i < sizeof(transForCalc); i++) {
+    if (i % (resolution * 2) == 0) {
+      transCalc << transForCalc[sizeof(transForCalc) - 1 - i];
+    }
+    if (sizeof(transCalc) > (ATRLENGTH + EMALEN)) {
+      break;
+    }
+  }
+
   for (integer i = 0; i < ATRLENGTH; i++) {
     transaction tempTrans[];
     for (integer j = i; j < (i + EMALEN); j++) {
-      tempTrans >> transForTest[j];
+      tempTrans >> transCalc[j];
     }
     bar tempBar = generateBar(tempTrans);
     atrBars >> tempBar;
   }
 
   for (integer i = 0; i < EMALEN; i++) {
-    transaction tempTran = transForTest[ATRLENGTH + i];
+    transaction tempTran = transCalc[ATRLENGTH + i];
     transactions >> tempTran;
     emaPrices >> tempTran.price;
   }
