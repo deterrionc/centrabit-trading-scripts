@@ -372,15 +372,11 @@ void main() {
   setCurrentChartsSymbol(SYMBOLSETTING);
   clearCharts();
   setChartTime(getCurrentTime() +  30 * 24 * 60 * 1000000);
-
   setChartDataTitle("BollingerBands - " + toString(SMALEN) + ", " + toString(STDDEVSETTING));
-
   setCurrentSeriesName("Sell");
   configureScatter(true, "red", "red", 7.0);
-
   setCurrentSeriesName("Buy");
   configureScatter(true, "#7dfd63", "#187206", 7.0,);
-
   setCurrentSeriesName("Middle");
   configureLine(true, "grey", 2.0);
   setCurrentSeriesName("Upper");
