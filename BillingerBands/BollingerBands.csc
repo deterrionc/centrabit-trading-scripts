@@ -51,7 +51,6 @@ float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
 float   baseCurrencyBalance;
 float   quoteCurrencyBalance;
-float   lastPrice       = 0.0;
 float   barPriceInSMAPeriod[];
 
 transaction currentTran;
@@ -102,8 +101,6 @@ event onPubOrderFilled(string exchange, transaction t) {
   drawChartPointToSeries("Middle", t.tradeTime, sma);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
-
-  lastPrice = t.price;
 
   if (t.price > upperBand) {      # Sell Signal
     boolean sellSignal = false;
@@ -394,8 +391,6 @@ void main() {
   print("Initial bollingerSTDDEV :" + toString(stddev));
   print("Initial bollingerUpperBand :" + toString(upperBand));
   print("Initial bollingerLowerBand :" + toString(lowerBand));
-
-  lastPrice = barsInPeriod[sizeof(barsInPeriod)-1].closePrice;
 
   integer now = getCurrentTime();
   logFilePath = logFilePath + timeToString(now, "yyyy_MM_dd_hh_mm_ss") + ".csv";
