@@ -24,38 +24,8 @@ integer SMALEN          = 20;                       # SMA period length
 float   STDDEVSETTING   = 1.0;                      # Standard Deviation
 string  RESOL           = "1m";                     # Bar resolution
 float   AMOUNT          = 0.1;                      # The amount of buy or sell order at once
-float   STOPLOSSAT      = 0.01;                     # Stoploss as fraction of price
+float   STOPLOSSAT      = 0.1;                      # Stoploss as fraction of price
 boolean USETRAILINGSTOP = true;
-
-void getEnvVariables() {
-  if (strlength(getEnv("EXCHANGESETTING")) != 0) {
-    EXCHANGESETTING = getEnv("EXCHANGESETTING");
-  }
-  if (strlength(getEnv("SYMBOLSETTING")) != 0) {
-    SYMBOLSETTING = getEnv("SYMBOLSETTING");
-  }
-  if (strlength(getEnv("SMALEN")) != 0) {
-    SMALEN = toInteger(getEnv("SMALEN"));
-  }
-  if (strlength(getEnv("STDDEVSETTING")) != 0) {
-    STDDEVSETTING = toFloat(getEnv("STDDEVSETTING"));
-  }
-  if (strlength(getEnv("RESOL")) != 0) {
-    RESOL = getEnv("RESOL");
-  }
-  if (strlength(getEnv("AMOUNT")) != 0) {
-    AMOUNT = toFloat(getEnv("AMOUNT"));
-  }
-  if (strlength(getEnv("STOPLOSSAT")) != 0) {
-    STOPLOSSAT = toFloat(getEnv("STOPLOSSAT"));
-  }
-  if (strlength(getEnv("USETRAILINGSTOP")) != 0) {
-    USETRAILINGSTOP = toBoolean(getEnv("USETRAILINGSTOP"));
-  }
-}
-
-getEnvVariables();
-
 #############################################
 
 # Trading information
@@ -83,11 +53,6 @@ float   quoteCurrencyBalance;
 float   lastPrice       = 0.0;
 float   barPriceInSMAPeriod[];
 
-# Stop-loss and trailing stop info
-float   lockedPriceForProfit  = 0.0;
-float   upperStopLimit        = 0.0;
-float   lowerStopLimit        = 0.0;
-
 transaction currentTran;
 transaction entryTran;
 integer profitSeriesID        = 0;
@@ -112,29 +77,6 @@ void fileLog(string tradeLog) {
   fclose(logFile);
 }
 
-boolean trailingStopTick(float price) {
-  if (USETRAILINGSTOP == false) {
-    return false;
-  }
-
-  if (price < lowerBand) {
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit < price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-  
-  if (price > upperBand) {
-    if (lockedPriceForProfit == 0.0 || lockedPriceForProfit > price) {
-      lockedPriceForProfit = price;
-      return true;
-    }
-  }
-
-  lockedPriceForProfit = 0.0;
-  return false;
-}
-
 event onPubOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
   if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
@@ -144,20 +86,8 @@ event onPubOrderFilled(string exchange, transaction t) {
   drawChartPointToSeries("Middle", t.tradeTime, sma);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
-  if (upperStopLimit > 0.0) drawChartPointToSeries("upperStop", t.tradeTime, upperStopLimit);
-  if (lowerStopLimit > 0.0) drawChartPointToSeries("lowerStop", t.tradeTime, lowerStopLimit);
 
   lastPrice = t.price;
-
-  if (trailingStopTick(t.price)) {
-    return;
-  }
-
-  string stopLossFlag = getVariable("stopLossFlag");
-
-  if (stopLossFlag == "1") {
-    return;
-  }
 
   if (t.price > upperBand) {      # Sell Signal
     boolean sellSignal = false;
@@ -184,7 +114,6 @@ event onPubOrderFilled(string exchange, transaction t) {
       }
 
       currentTran = t;
-      upperStopLimit = getUpperLimit(t.price);
 
       if ((currentOrderId % 2) == 1) {  # if entry
         setVariable("entryPrice", toString(t.price));
@@ -233,7 +162,6 @@ event onPubOrderFilled(string exchange, transaction t) {
       }
 
       currentTran = t;
-      lowerStopLimit = getLowerLimit(t.price);
       
       if ((currentOrderId % 2) == 1) {  # if entry
         setVariable("entryPrice", toString(t.price));
@@ -334,28 +262,6 @@ event onOwnOrderFilled(string exchange, transaction t) {
     fileLog(tradeLog);
 
     profitSeriesID++;
-
-    string stopLossFlag = getVariable("stopLossFlag");
-    float exitPrice = toFloat(getVariable("exitPrice"));
-    if (stopLossFlag == "1") {
-      currentTran = t;
-      currentTran.price = exitPrice;
-      setVariable("stopLossFlag", "0");
-      currentOrderId++;
-      position = "flat";
-
-      if (t.isAsk) {
-        print("  Bought -> stop release");
-        prevPosition = "short";
-        buyCount++;
-        drawChartPointToSeries("Buy", t.tradeTime, exitPrice);
-      } else {
-        print("  Sold -> stop release");
-        prevPosition = "long";
-        sellCount++;
-        drawChartPointToSeries("Sell", t.tradeTime, exitPrice);
-      }
-    }
 
     setCurrentSeriesName("Direction" + toString(profitSeriesID));
     configureLine(false, profitSeriesColor, 2.0);
@@ -470,10 +376,6 @@ void main() {
   configureLine(true, "#0095fd", 2.0);
   setCurrentSeriesName("Lower");
   configureLine(true, "#fd4700", 2.0);
-  setCurrentSeriesName("upperStop");
-  configureLine(true, "pink", 2.0);
-  setCurrentSeriesName("lowerStop");
-  configureLine(true, "pink", 2.0);
 
   sma = SMA(barPriceInSMAPeriod);
   stddev = STDDEV(barPriceInSMAPeriod, sma);
