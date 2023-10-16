@@ -25,11 +25,12 @@ float   STDDEVSETTING   = 1.0;                      # Standard Deviation
 string  RESOL           = "1m";                     # Bar resolution
 float   AMOUNT          = 1.0;                      # The amount of buy or sell order at once
 float   STOPLOSSAT      = 0.1;                      # Stoploss as fraction of price
+string  logFilePath     = "c:/bb_log_tradelist_";   # Please make sure this path any drive except C:
 boolean USETRAILINGSTOP = true;
 #############################################
 
 # Trading information
-string  logFilePath     = "c:/bb_log_tradelist_";   # Please make sure this path any drive except C:
+boolean canTrade        = true;
 string  position        = "flat";
 string  prevPosition    = "";    # "", "long", "short"
 float   sma             = 100.0;
@@ -77,12 +78,27 @@ void fileLog(string tradeLog) {
   fclose(logFile);
 }
 
+void updateBollingerBandsParams(transaction t) {
+  barPriceInSMAPeriod >> t.price;
+  delete barPriceInSMAPeriod[0];
+  sma = SMA(barPriceInSMAPeriod);
+  stddev = STDDEV(barPriceInSMAPeriod, sma);
+  upperBand = bollingerUpperBand(barPriceInSMAPeriod, sma, stddev, STDDEVSETTING);
+  lowerBand = bollingerLowerBand(barPriceInSMAPeriod, sma, stddev, STDDEVSETTING);
+}
+
 event onPubOrderFilled(string exchange, transaction t) {
   # Check exchange and currency is correct when order filled
   if (exchange != EXCHANGESETTING || t.symbol != SYMBOLSETTING) {
     return;
   }
 
+  if (!canTrade) {
+    return;
+  }
+
+  currentTran = t;
+  updateBollingerBandsParams(t);
   drawChartPointToSeries("Middle", t.tradeTime, sma);
   drawChartPointToSeries("Upper", t.tradeTime, upperBand);
   drawChartPointToSeries("Lower", t.tradeTime, lowerBand);
@@ -113,7 +129,7 @@ event onPubOrderFilled(string exchange, transaction t) {
         sellMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       }
 
-      currentTran = t;
+      canTrade = false;
 
       if ((currentOrderId % 2) == 1) {  # if entry
         setVariable("entryPrice", toString(t.price));
@@ -161,7 +177,7 @@ event onPubOrderFilled(string exchange, transaction t) {
         buyMarket(EXCHANGESETTING, SYMBOLSETTING, AMOUNT, currentOrderId);
       }
 
-      currentTran = t;
+      canTrade = false;
       
       if ((currentOrderId % 2) == 1) {  # if entry
         setVariable("entryPrice", toString(t.price));
@@ -333,12 +349,7 @@ event onOwnOrderFilled(string exchange, transaction t) {
 }
 
 event onTimedOut(integer interval) {
-  barPriceInSMAPeriod >> lastPrice;
-  delete barPriceInSMAPeriod[0];
-  sma = SMA(barPriceInSMAPeriod);
-  stddev = STDDEV(barPriceInSMAPeriod, sma);
-  upperBand = bollingerUpperBand(barPriceInSMAPeriod, sma, stddev, STDDEVSETTING);
-  lowerBand = bollingerLowerBand(barPriceInSMAPeriod, sma, stddev, STDDEVSETTING);
+  canTrade = true;
 }
 
 void main() {
