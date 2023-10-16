@@ -49,8 +49,6 @@ float   totalWin        = 0.0;
 float   totalLoss       = 0.0;
 float   entryAmount     = 0.0;
 float   entryFee        = 0.0;
-float   baseCurrencyBalance;
-float   quoteCurrencyBalance;
 float   barPriceInSMAPeriod[];
 
 transaction currentTran;
@@ -58,8 +56,9 @@ transaction entryTran;
 integer profitSeriesID        = 0;
 string  profitSeriesColor     = "green";
 string  tradeSign             = "";
-string  tradeLogList[];
-file logFile;
+file    logFile;
+float   baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
+float   quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
 
 float getUpperLimit(float price) {
   return price * (1.0 + STOPLOSSAT);
@@ -128,12 +127,6 @@ event onPubOrderFilled(string exchange, transaction t) {
 
       canTrade = false;
 
-      if ((currentOrderId % 2) == 1) {  # if entry
-        setVariable("entryPrice", toString(t.price));
-      }
-
-      setVariable("inProcess", "1");
-
       if (position == "flat") {
         if (prevPosition == "") {
           prevPosition = "short";
@@ -176,12 +169,6 @@ event onPubOrderFilled(string exchange, transaction t) {
 
       canTrade = false;
       
-      if ((currentOrderId % 2) == 1) {  # if entry
-        setVariable("entryPrice", toString(t.price));
-      }
-
-      setVariable("inProcess", "1");
-
       if (position == "flat") {
         if (prevPosition == "") {
           prevPosition = "long";
@@ -205,7 +192,6 @@ event onOwnOrderFilled(string exchange, transaction t) {
     return;
   }
   
-  setVariable("inProcess", "0");
   float amount = t.price * t.amount;
   feeTotal += t.fee;
 
@@ -398,11 +384,7 @@ void main() {
   fwrite(logFile, ",Trade,Time," + SYMBOLSETTING + ",," + getBaseCurrencyName(SYMBOLSETTING) + "(per),Prof" + getQuoteCurrencyName(SYMBOLSETTING) + ",Acc,\n");
   fclose(logFile);
 
-  baseCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getBaseCurrencyName(SYMBOLSETTING));
-  quoteCurrencyBalance = getAvailableBalance(EXCHANGESETTING, getQuoteCurrencyName(SYMBOLSETTING));
-
   print("--------------   Running   -------------------");
-
   addTimer(resolution * 10 * 1000);
 }
 
